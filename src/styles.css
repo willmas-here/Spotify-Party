@@ -1,0 +1,174 @@
+body.popup{
+    width: 360px;
+    height: 180px;
+    background-color: #191414;
+    border: 1px solid white;
+
+}
+
+body.main{
+    width: 480px;
+    height: 240px;
+    background-color: #191414;
+    border: 1px solid white;
+    padding: 0px;
+}
+
+.header{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 10px 20px;
+}
+
+.header-main{
+    height: 70px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 0px 20px;
+}
+
+h1.title{
+    font-family: 'Montserrat Alternates', Verdana, sans-serif;
+    font-size: 30px;
+    color: #1DB954;
+    margin: 0;
+}
+
+.header-main h1.title{
+    
+    margin: 17px 20px;
+}
+
+button.settings{
+    background-color: rgba(0,0,0,0);
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    color:#CFCBBA;
+    font-size: 23px;
+}
+
+button.settings:hover{
+    color: #9A9A9A;
+}
+
+.select-container{
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin: 26px 40px;
+}
+
+.select-container .btn{
+    background-color: #1DB954;
+    width: 128px;
+    height: 45px;
+    border: 0;
+    outline: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 12px;
+    color: #fffae3;
+}
+
+.select-container .btn:hover{
+    background-color: #169A44;
+    color: #EBEBEB;
+}
+
+.code-container{
+    margin: 28px 79px 21px;  
+}
+
+.code-container input[type='text']{
+    height: 35px;
+    width: 160px;
+    outline: none;
+    border: none;
+    border-radius: 25px;
+    padding: 0px 15px;
+    background-color: #615C5C;
+    color: #e6e3d9;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 17px;
+}
+
+.code-container input[type='text']::placeholder{
+    color: #AEAEAE;
+    font-size: 15px;
+}
+
+.code-container input[type='submit']{
+    background-color: #1DB954;
+    width: 100px;
+    height: 30px;
+    margin: 21px 42px;
+    border: 0;
+    outline: none;
+    border-radius: 25px;
+    cursor: pointer;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 12px;
+    color: #fffae3;
+}
+
+.main-container{
+    width: 480px;
+    height: 170px;
+    margin: 0px;
+    display: grid;
+    grid-template-columns: 310px 170px;
+    grid-template-rows: 44px auto 70px;
+    background-image: linear-gradient(#2e2828, #4D4D4D);
+}
+
+.main-item{
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-weight: 500;
+    color: #DADADA;
+    margin: 0px 10px 0px;
+}
+
+.main-item.song{
+    font-size: 20px;
+    grid-column: 1;
+    grid-row: 1;
+    margin-top: 10px;
+    /* margin: 15px 10px 0px; */
+}
+
+.main-item.artist{
+    grid-column: 1;
+    grid-row: 2;
+    font-size: 15px;
+    /* margin: 2px 10px 0px; */
+    /* margin: 0px; */
+}
+
+.main-item.code, .main-item.far{
+    font-size: 15px;
+    grid-column: 1;
+    grid-row: 4;
+    /* margin: 60px 10px 0px; */
+    /* margin: 0px; */
+}
+.main-item.code .code{
+    margin: 0px;
+}
+
+.art{
+    grid-column: 2;
+    grid-row: 1 span 3;
+    height: 170px;
+    width: 170px;
+    border: none;
+}
+/* .version{
+    color:#9A9A9A;
+    font-family: 'Roboto', Arial, sans-serif;
+    text-align: right;
+    margin-bottom: 10px;
+} */
