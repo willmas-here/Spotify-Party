@@ -2,9 +2,12 @@
     "manifest_version": 2,
     "name": "Spotify Party",
     "version": "1.0.0",
-    "icons": {"128": "icon_128.png"},
-    "brower_action": {
+    "icons": {
+        "128": "icon_128.png"
+    },
+    "browser_action": {
         "default_icon": "icon_19.png",
+        "default_title": "Spotify Party",
         "default_popup": "popup.html"
     },
     "permissions": ["activeTab"]
