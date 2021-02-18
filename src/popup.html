@@ -4,39 +4,48 @@
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script src="https://kit.fontawesome.com/da3f889f47.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="static/fontawesome/css/all.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat+Alternates:b|Noto+Sans+SC:500|Roboto">
-    <link rel="stylesheet" href="styles.css">
-    <title>Spotify Party</title>
+    <link rel="stylesheet" href="popup.css">
+    <script src="popup.js" defer></script>
+    <title>Music Party</title>
 </head>
 <body>
-    <div class="header">
-        <h1 class="title">Spotify Party</h1>
-        <button type="button" class="settings"><i class="fas fa-cog"></i></button>
+    <div class="content" id="content">
+        <div class="header">
+            <h1 class="title">Music Party</h1>
+            <button type="button" class="settings-btn" id="settings-btn"><i class="fas fa-cog"></i></button>
+        </div>
+
+        <div class="body-container" id="body-container">
+            <div class="body menu" id="menu">
+                <div class="menu-container">
+                    <button type="button" class="btn" id="create-btn">Create Party</button>
+                    <button type="button" class="btn" id="join-btn">Join Party</button>
+                </div>
+            </div>
+
+            <div class="body join" id="join">
+                <form class="code-container">
+                    <input type="text" id="code" name="code" required placeholder="Enter Code">
+                    <input type="submit" value="Join">
+                </form>
+            </div>
+
+            <div class="body main" id="main">
+                <h2 class="main-item song">Daughters strong or smth</h2>
+                <h3 class="main-item artist">Webb schoosl lmao</h3>
+                <div class="main-item code">
+                    <p class="code">Party Code: 123456 <i class="far fa-question-circle"></i></p>
+                </div>
+                <button class="main-item queue" id="queue-btn">Queue</button>
+                <img class="art" src="" alt="">
+            </div>
+        </div>
     </div>
-
-    <div class="body-container">
-        <div class="body menu">
-            <div class="menu-container">
-                <button type="button" class="btn">Create Party</button>
-                <button type="button" class="btn">Join Party</button>
-            </div>
-        </div>
-
-        <div class="body join">
-            <form class="code-container">
-                <input type="text" id="input-code" name="input-code" required placeholder="Enter Code">
-                <input type="submit" value="Join">
-            </form>
-        </div>
-
-        <div class="body main">
-            <h2 class="main-item song">Daughters strong or smth</h2>
-            <h3 class="main-item artist">Webb schoosl lmao</h3>
-            <div class="main-item code">
-                <p class="code">Party Code: 123456 <i class="far fa-question-circle"></i></p>
-            </div>
-            <img class="art" src="" alt="">
-        </div>
+    <div class="settings" id="settings-menu">
+        <button class="settings-item options" id="options-btn">Options</button>
+        <button class="settings-item leave" id="leave-btn">Leave Party</button>
+        <button class="settings-item logout" id="logout-btn">Log Out</button>
     </div>
 </body>

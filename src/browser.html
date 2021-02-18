@@ -7,14 +7,14 @@
     <link rel="stylesheet" href="static/fontawesome/css/all.css">
     <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Montserrat+Alternates:b|Noto+Sans+SC:400,500|Roboto">
     <link rel="stylesheet" href="browser.css">
-    <script src="popup.js" defer></script>
-    <title>Spotify Party</title>
+    <script src="browser.js" defer></script>
+    <title>Music Party</title>
 </head>
 <body>
-    <div class="main">
+    <div class="main" id="main">
         <div class="header-container">
-            <h1 class="header title">Spotify Party</h1>
-            <button type="button" class="header settings"><i class="fas fa-cog"></i></button>
+            <h1 class="header title">Music Party</h1>
+            <button type="button" class="header settings" id="settings-btn"><i class="fas fa-cog"></i></button>
         </div>
         <div class="add-container">
             <h2 class="add-heading">Add Songs</h2>
@@ -90,12 +90,6 @@
                 <p class="queue-heading title">Title</p>
                 <p class="queue-heading artist">Artist</p>
                 <p class="queue-heading user">Added By</p>
-            </div>
-            <div class="queue-item-container" id="queue-sample-id1">
-                <p class="queue-item index">1</p>
-                <p class="queue-item title">song numero uno</p>
-                <p class="queue-item artist">yur mom</p>
-                <p class="queue-item user">willma</p>
             </div>
             <div class="queue-item-container" id="queue-sample-id1">
                 <p class="queue-item index">#</p>
@@ -261,7 +255,7 @@
             </div>
         </div>
     </div>
-    <div class="menu">
+    <div class="menu" id="menu">
         <button class="menu-item options">Options</button>
         <button class="menu-item leave">Leave Party</button>
         <button class="menu-item logout">Log Out</button>
