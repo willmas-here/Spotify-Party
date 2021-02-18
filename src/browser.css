@@ -1,0 +1,241 @@
+body{
+    margin: 0px;
+    padding: 0px;
+    height: 100vh;
+}
+
+.main{
+    display: grid;
+    gap: 0px;
+    grid-template-columns: 450px auto;
+    grid-template-rows: 100px auto;
+    height: 100%;
+}
+
+/* scrollbar */
+::-webkit-scrollbar{
+    width: 10px;
+}
+
+::-webkit-scrollbar-track{
+    background: #f1f1f1;
+}
+
+::-webkit-scrollbar-thumb{
+    background: #888;
+}
+
+/* header */
+.header-container{
+    grid-column: 1 / span 2;
+    grid-row: 1;
+    background-color: #191414;
+    margin: 0px 0px;
+    padding: 0px 20px;
+    display: grid;
+    grid-template-columns: 42px auto 42px;
+    justify-items: center;
+}
+
+.header.title{
+    grid-column: 2;
+    font-family: 'Montserrat Alternates', Verdana, sans-serif;
+    font-size: 55px;
+    color: #1DB954;
+    margin: auto;
+}
+
+.header.settings{
+    grid-column: 3;
+    background-color: rgba(0,0,0,0);
+    border: 0;
+    outline: none;
+    cursor: pointer;
+    color:#CFCBBA;
+    font-size: 23px;
+    height: 35px;
+    width: 35px;
+    margin:20px 20px auto auto;
+}
+
+.header.settings:hover{
+    color: #9A9A9A;
+}
+
+.header.settings i{
+    font-size: 35px;
+}
+
+/* add */
+.add-container{
+    grid-column: 1;
+    grid-row: 2;
+    background-color: #1F1F1F;
+}
+
+.add-heading{
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 30px;
+    font-weight: 500;
+    color: #EBE9E9;
+    width: fit-content;
+    margin: 10px auto 10px auto;
+}
+
+.search-container{
+    
+    margin: 10px 30px;
+}
+
+.search-container input{
+    height: 40px;
+    width: 350px;
+    outline: none;
+    border: none;
+    border-radius: 25px;
+    padding: 0px 15px;
+    background-color: #615C5C;
+    color: #f3f1ec;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 17px;
+    font-weight: 400;
+}
+
+.results-container{
+    display: flex;
+    flex-direction: column;
+    margin: 10px;
+    padding-right: 10px;
+    height: calc(100vh - 84px - 140px);
+    overflow-y: overlay;
+}
+
+.results-item.container{
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    color: #EBE9E9;
+    border-bottom: 1px solid #707070;
+    display: grid;
+    grid-template-columns: auto 90px;
+    grid-template-rows: auto auto;
+}
+
+.results-item.title{
+    grid-row: 1;
+    grid-column: 1;
+    font-size: 22px;
+    margin: 5px 5px auto 3px;
+}
+
+.results-item.artist{
+    grid-row: 2;
+    grid-column: 1;
+    font-size: 17px;
+    margin: 5px 5px 5px 3px;
+}
+
+.results-item.add-btn{
+    grid-row: 1 / span 2;
+    grid-column: 2;
+
+    width: 80px;
+    height: 30px;
+    outline: none;
+    border: none;
+    border-radius: 25px;
+    background-color: #7D7D7D;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    color: #EBE9E9;
+    font-size: 16px;
+    padding: 0px 15px;
+    margin: auto 3px auto auto;
+}
+
+.results-item.add-btn:hover{
+    background-color: #6b6b6b;
+    cursor: pointer;
+}
+
+/* queue */
+.queue-container{
+    grid-column: 2;
+    grid-row: 2;
+    background-image: linear-gradient(#1F1F1F, #444444);
+    height: calc(100vh - 110px);
+    overflow-y: scroll;
+    padding: 5px 20px;
+}
+
+.index{
+    grid-column: 1;
+    padding-left: 10px;
+}
+.title{
+    grid-column: 2;
+}
+.artist{
+    grid-column: 3;
+}
+.user{
+     grid-column: 4;
+}
+.queue-headings{
+    display: grid;
+    grid-template-columns: 40px auto 25% 25%;
+    margin: 15px 0px 0px;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 17px;
+    color: #DADADA;
+}
+
+.queue-heading{
+    margin: 0px 0px 3px 0px;
+}
+
+.queue-item-container{
+    display: grid;
+    grid-template-columns: 40px auto 25% 25%;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 19px;
+    color: #EBE9E9;
+    margin: 0px;
+    padding: 11px 0px 6px;
+    border-bottom: solid 1px #707070;
+}
+
+.queue-item{
+    margin: 0px;
+}
+
+/* menu */
+.menu{
+    position: fixed;
+    right: 20px;
+    top: 60px;
+    border-radius: 15px;
+    width: 180px;
+    padding: 10px 15px;
+    background-color: #363636;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 19px;
+    color: #EBE9E9;
+}
+
+.menu h1{
+    margin: 0px;
+}
+
+.menu-item{
+    display: block;
+    font-family: 'Noto Sans SC', Arial, sans-serif;
+    font-size: 19px;
+    color: #EBE9E9;
+    background-color: rgba(0,0,0,0);
+    border: none;
+    width: 100%;
+    text-align: left;
+}
+
+.menu-item:hover{
+    cursor: pointer;
+    background-color:#464646;
+}
