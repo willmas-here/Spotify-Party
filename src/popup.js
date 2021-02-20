@@ -22,8 +22,9 @@ function joinParty(){
 };
 
 function createParty(){
-    // create a room
-    // join the room
+    chrome.runtime.sendMessage({command: "createParty"}, function(response){
+        console.log(response);
+    });
     changePage('main');
     console.log('create party');    
 };
@@ -42,10 +43,26 @@ function closeSettings(){
 }
 
 window.addEventListener('load', function(){
+    // main buttons event listeners
     document.getElementById("create-btn").addEventListener("click", createParty);
     document.getElementById("join-btn").addEventListener("click", joinParty);
     document.getElementById("settings-btn").addEventListener("click", openSettings, true);
-    
+    document.getElementById("queue-btn").addEventListener("click", function(){
+        window.open(chrome.runtime.getURL('browser.html'));
+    })
+
+    // options menu event listeners
+    document.getElementById("options-btn").addEventListener("click", function(){
+        if (chrome.runtime.openOptionsPage) {
+            chrome.runtime.openOptionsPage();
+        } else {
+            window.open(chrome.runtime.getURL('options.html'));
+        }
+    });
+
+    // hiding things
     document.getElementById("settings-menu").style.display = "none";
     changePage('menu');
+
+    
 });

@@ -1,5 +1,12 @@
 window.addEventListener('load', function(){
     document.getElementById("settings-btn").addEventListener("click", openSettings, true);
+    document.getElementById("options-btn").addEventListener("click", function(){
+        if (chrome.runtime.openOptionsPage) {
+            chrome.runtime.openOptionsPage();
+        } else {
+            window.open(chrome.runtime.getURL('options.html'));
+        }
+    });
 
     document.getElementById("menu").style.display = "none";
 })
