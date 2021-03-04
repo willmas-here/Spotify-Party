@@ -17,7 +17,7 @@ window.addEventListener('load', function(){
 
 function togglePlay(){
     // update firebase play/pause
-    
+    // spotify play/pause
 }
 
 function openSettings(){

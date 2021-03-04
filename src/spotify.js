@@ -54,30 +54,31 @@ async function spotifyLogin(){
     }
 
     
-    const verifier = encodeURIComponent(generateRandomString());
-    const challenge = await challenge_from_verifier(decodeURIComponent(verifier));
-    const redirect_uri = encodeURIComponent(chrome.identity.getRedirectURL('spotify_cb/'));
-    const state = encodeURIComponent(generateState());
-    const client_id = encodeURIComponent('a1c309e78e4c4cac8eb5f87d7f74a3c4')
+    const verifier = generateRandomString();
+    const challenge = await challenge_from_verifier(verifier);
+    const redirect_uri = chrome.identity.getRedirectURL('spotify_cb/');
+    const state = generateState();
+    const client_id = 'a1c309e78e4c4cac8eb5f87d7f74a3c4'
+    const scope = 'streaming user-read-playback-state user-modify-playback-state'
     chrome.storage.sync.set({'state': state});
 
     console.log('verifier:', verifier);
     console.log('challenge:', challenge);
     console.log('state:', state);
-    console.log('redirect_url:', redirect_uri)
-    
-    let authURL = 'https://accounts.spotify.com/authorize?' + 
-        'client_id=' + client_id + 
-        '&response_type=code' +
-        '&redirect_uri=' + redirect_uri +
-        '&code_challenge_method=S256' +
-        '&code_challenge=' + challenge + 
-        '&state=' + state +
-        '&scope=streaming%20user-read-playback-state%20user-modify-playback-state'
+    console.log('redirect_uri:', redirect_uri)
 
-    console.log(authURL);
+    let authURL = new URL('https://accounts.spotify.com/authorize');
+    authURL.searchParams.append('client_id', client_id);
+    authURL.searchParams.append('response_type', 'code');
+    authURL.searchParams.append('redirect_uri', redirect_uri);
+    authURL.searchParams.append('code_challenge_method', 'S256');
+    authURL.searchParams.append('code_challenge', challenge);
+    authURL.searchParams.append('state', state);
+    authURL.searchParams.append('scope', scope);-modify-playback-state'
 
-    chrome.identity.launchWebAuthFlow({'url': authURL, 'interactive': true}, function(redirect_url){
+    console.log(authURL.toString());
+
+    chrome.identity.launchWebAuthFlow({'url': authURL.toString(), 'interactive': true}, function(redirect_url){
         console.log(redirect_url);
         if(typeof(redirect_url) === undefined){
             console.error('auth error');
