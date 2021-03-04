@@ -74,7 +74,7 @@ async function spotifyLogin(){
     authURL.searchParams.append('code_challenge_method', 'S256');
     authURL.searchParams.append('code_challenge', challenge);
     authURL.searchParams.append('state', state);
-    authURL.searchParams.append('scope', scope);-modify-playback-state'
+    authURL.searchParams.append('scope', scope);
 
     console.log(authURL.toString());
 
@@ -194,4 +194,18 @@ function toggleShuffle(toggle=false){
             'Authorization': 'Bearer ' + access_token
         }
     });
+}
+
+async function search(query){
+    let url = new URL('https://api.spotify.com/v1/search');
+    url.searchParams.append('q', query);
+    url.searchParams.append('type', 'track');
+
+    const response = await fetch(url, {
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + access_token
+        }
+    })
+    return await response.json()
 }
