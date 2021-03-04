@@ -8,7 +8,7 @@ body{
     display: grid;
     gap: 0px;
     grid-template-columns: 450px auto;
-    grid-template-rows: 100px auto;
+    grid-template-rows: 100px auto 100px;
     height: 100%;
 }
 
@@ -71,6 +71,7 @@ body{
     grid-column: 1;
     grid-row: 2;
     background-color: #1F1F1F;
+    height: calc(100vh - 180px);
 }
 
 .add-heading{
@@ -83,7 +84,6 @@ body{
 }
 
 .search-container{
-    
     margin: 10px 30px;
 }
 
@@ -106,7 +106,7 @@ body{
     flex-direction: column;
     margin: 10px;
     padding-right: 10px;
-    height: calc(100vh - 84px - 140px);
+    height: calc(100% - 114px);
     overflow-y: overlay;
 }
 
@@ -160,9 +160,9 @@ body{
     grid-column: 2;
     grid-row: 2;
     background-image: linear-gradient(#1F1F1F, #444444);
-    height: calc(100vh - 110px);
+    height: calc(100vh - 180px);
     overflow-y: scroll;
-    padding: 5px 20px;
+    padding: 0px 20px;
 }
 
 .index{
@@ -196,7 +196,7 @@ body{
     grid-template-columns: 40px auto 25% 25%;
     font-family: 'Noto Sans SC', Arial, sans-serif;
     font-size: 19px;
-    color: #EBE9E9;
+    color: #ebe9e9;
     margin: 0px;
     padding: 11px 0px 6px;
     border-bottom: solid 1px #707070;
@@ -204,6 +204,39 @@ body{
 
 .queue-item{
     margin: 0px;
+}
+
+/* controller */
+.controller-container{
+    height: 80px;
+    width: 100vw;
+    padding: 0px;
+    grid-row: 3;
+    display: flex;
+    justify-content: center;
+    background-color: #1F1F1F;
+}
+
+.controller.btn{
+    background-color: rgba(0,0,0,0);
+    border: 0;
+    outline: none;
+    margin: 20px 0px;
+    padding: 0px 15px;
+    color:#ebe9e9;    
+}
+
+.controller.btn:hover{
+    color:#969191;
+    
+}
+
+.controller.btn i{
+    font-size: 30px;
+}
+
+.controller.btn.play i{
+    font-size: 40px;
 }
 
 /* menu */
