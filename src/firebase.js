@@ -35,7 +35,15 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
     };
     
     if(msg.command === "joinParty"){
-        // join party
+        const partyCode = msg.partyCode;
+        const joinPromise = joinParty(partyCode);
+        joinPromise.then(function(){
+            response({response: "success"})
+        })
+    };
+
+    if(msg.command === ""){
+
     };
 
     
@@ -125,8 +133,12 @@ async function createParty(){
     });
     
     // open party screen - do it in popup
-    chrome.storage.local.set({inParty: true, partyCode:partyCode},function(){
+    chrome.storage.sync.set({inParty: true, partyCode:partyCode},function(){
         console.log('Party Code ' + partyCode + ' saved to storage')
-    })
+    });
     return partyCode
+}
+
+async function joinParty(partyCode){
+    // joinParty
 }
