@@ -28,10 +28,11 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
     console.log(msg);
     
     if(msg.command === "createParty"){
-        const createPromise = createParty();
-        createPromise.then(function(partyCode){
-            response({response: "success", code: partyCode});
+        createParty()
+        .then(function(partyCode){
+            response({response: "success", partyCode: partyCode});
         });
+        return true
     };
     
     if(msg.command === "joinParty"){

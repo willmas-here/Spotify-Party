@@ -26,8 +26,8 @@
             </div>
 
             <div class="body join" id="join">
-                <form class="code-container">
-                    <input type="text" id="code" name="code" required placeholder="Enter Code">
+                <form class="code-container" id="join-form">
+                    <input type="text" id="code" name="code" min="100000" max="10000000" required placeholder="Enter Code">
                     <input type="submit" value="Join">
                 </form>
             </div>
@@ -36,7 +36,7 @@
                 <h2 class="main-item song">Daughters strong or smth</h2>
                 <h3 class="main-item artist">Webb schoosl lmao</h3>
                 <div class="main-item code">
-                    <p class="code">Party Code: 123456 <i class="far fa-question-circle"></i></p>
+                    <p class="code" id="party-code">Party Code: 123456 <i class="far fa-question-circle"></i></p>
                 </div>
                 <button class="main-item queue" id="queue-btn">Queue</button>
                 <img class="art" src="" alt="">
