@@ -6,6 +6,19 @@ window.addEventListener("load", function(){
     
 });
 
+chrome.runtime.onMessage.addListener(function(msg, sender, response){
+    console.log(msg);
+
+    if (msg.command === 'spotifySearch'){
+        search(msg.query)
+        .then(function(tracks){
+            response({response: "success", tracks: tracks});
+        });
+
+        return true
+    }
+});
+
 async function spotifyLogin(){
     // code verifier
     function dec2hex(dec) {
@@ -97,7 +110,6 @@ async function spotifyLogin(){
         }
 
         const code = params[0].replace('code=', '');
-        const body = "client"
 
         // get access token
         const tokenPromise = fetch('https://accounts.spotify.com/api/token', {
@@ -206,6 +218,6 @@ async function search(query){
         headers: {
             'Authorization': 'Bearer ' + access_token
         }
-    })
+    });
     return await response.json()
 }
