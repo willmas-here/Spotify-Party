@@ -1,4 +1,8 @@
 window.addEventListener('load', function(){
+    document.getElementById("back-btn").addEventListener("click", function(){});
+    document.getElementById("forward-btn").addEventListener("click", function(){});
+    document.getElementById("play-btn").addEventListener("click", togglePlay);
+
     document.getElementById("settings-btn").addEventListener("click", openSettings, true);
     document.getElementById("options-btn").addEventListener("click", function(){
         if (chrome.runtime.openOptionsPage) {
@@ -9,7 +13,12 @@ window.addEventListener('load', function(){
     });
 
     document.getElementById("menu").style.display = "none";
-})
+});
+
+function togglePlay(){
+    // update firebase play/pause
+    
+}
 
 function openSettings(){
     document.getElementById("menu").style.display = "block";

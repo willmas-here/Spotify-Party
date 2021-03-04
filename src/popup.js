@@ -22,7 +22,7 @@ window.addEventListener('load', function(){
     
     // if in party
     chrome.storage.sync.get(['inParty'], function(result) {
-        if(result.hasOwnProperty('inParty')){
+        if(result.inParty === true){
             changePage('main');
         } else {
             changePage('menu');
@@ -51,7 +51,7 @@ function changePage(newPage) {
 
 function initMain() {
     chrome.storage.sync.get(['partyCode'], function(result) {
-        document.getElementById("party-code").innerText = result.partyCode;
+        document.getElementById("party-code").innerText = 'Party Code: ' + result.partyCode;
     });
 }
 
