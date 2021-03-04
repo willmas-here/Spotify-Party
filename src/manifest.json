@@ -25,6 +25,8 @@
         "tabs",
         "identity",
         "[https://api.spotify.com/*](https://api.spotify.com/*)",
+        "[https://accounts.spotify.com/*](https://accounts.spotify.com/*)",
+        "[https://sdk.scdn.co/*](https://sdk.scdn.co/*)",
         "storage"
     ]
 }
