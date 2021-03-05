@@ -26,11 +26,7 @@ window.addEventListener("load", function(){
         if(result.inParty === true){
             partyCode = result.partyCode;
             
-            const partyQueueRef = database.ref('queues/' + partyCode);
-            console.log(partyQueueRef)
-            partyQueueRef.on('value', (snapshot) => {
-                queue = snapshot.val();
-            })
+            updateQueue();
         }
     });    
 });
@@ -56,10 +52,12 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
 
     if(msg.command === "addToQueue"){
         // add to queue
-        addToQueue(msg.trackId)
+        addToQueue(msg.trackObj);
     };
 
-    
+    if(msg.command === 'openBrowser'){
+        updateQueue();
+    }
 });
 
 async function createParty(){
@@ -79,7 +77,7 @@ async function createParty(){
     let partyCode = 0;
 
     while (!validCode){
-        partyCode = Math.floor(Math.random() * (10000000-100000) + 100000);
+        partyCode = Math.floor(Math.random() * (1000000-100000) + 100000);
 
         if(!snapshot.child(partyCode).exists()){
             validCode = true;
@@ -145,12 +143,7 @@ async function createParty(){
         console.log('Users set error', error);
     });
 
-
-    const partyQueueRef = database.ref('queues/' + partyCode);
-    console.log(partyQueueRef)
-    partyQueueRef.on('value', (snapshot) => {
-        queue = snapshot.val();
-    })
+    updateQueue();
     
     // open party screen - do it in popup
     chrome.storage.sync.set({inParty: true, partyCode:partyCode},function(){
@@ -166,7 +159,19 @@ async function joinParty(partyCode){
     // joinParty
 }
 
-function addToQueue(artist, title, track_id){
+function updateQueue(){
+    const partyQueueRef = database.ref('queues/' + partyCode);
+    console.log(partyQueueRef)
+    partyQueueRef.on('value', (snapshot) => {
+        queue = snapshot.val();
+        
+        chrome.runtime.sendMessage({'command': 'updateQueue', 'queueObj': queue}, function(response){
+            console.log(response);
+        });
+    });
+}
+
+function addToQueue(trackObj){
     // get last index
     let queueIndex;
     if (typeof(queue) === "object"){
@@ -177,9 +182,9 @@ function addToQueue(artist, title, track_id){
 
     // update new index
     const queueItem = {
-        'artist': artist,
-        'title': title,
-        'track_id': track_id,
+        'artist': encodeURIComponent(trackObj.artist),
+        'title': encodeURIComponent(trackObj.title),
+        'track_id': encodeURIComponent(trackObj.track_id),
         'user': firebase.auth().currentUser.uid
     };
 

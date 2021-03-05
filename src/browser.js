@@ -15,6 +15,53 @@ window.addEventListener('load', function(){
     });
 
     document.getElementById("menu").style.display = "none";
+
+    // load queue
+    chrome.runtime.sendMessage({'command': 'openBrowser'})
+});
+
+chrome.runtime.onMessage.addListener(function(msg, sender, response){
+    console.log(msg);
+
+    if (msg.command === 'updateQueue'){
+        const queueObj = msg.queueObj;
+        // delete existing queue
+        const queueItems = document.getElementsByClassName('queue-item-container');
+
+        while (queueItems.length > 0) {
+            queueItems.item(0).remove();
+        }
+
+        // populate queue
+        queueObj.forEach((element, i) => {
+            let queueItemContainer = document.createElement('div');
+            queueItemContainer.className = "queue-item-container";
+            queueItemContainer.id = "queue-container-" + decodeURIComponent(element.track_id);
+
+            let queueItemIndex = document.createElement('p');
+            queueItemIndex.className = "queue-item index";
+            queueItemIndex.innerText = i;
+
+            let queueItemTitle = document.createElement('p');
+            queueItemTitle.className = "queue-item title";
+            queueItemTitle.innerText = decodeURIComponent(element.title);
+
+            let queueItemArtist = document.createElement('p');
+            queueItemArtist.className = "queue-item artist";
+            queueItemArtist.innerText = decodeURIComponent(element.artist);
+
+            let queueItemUser = document.createElement('p');
+            queueItemUser.className = "queue-item user";
+            queueItemUser.innerText = decodeURIComponent(element.user);
+
+            queueItemContainer.appendChild(queueItemIndex);
+            queueItemContainer.appendChild(queueItemTitle);
+            queueItemContainer.appendChild(queueItemArtist);
+            queueItemContainer.appendChild(queueItemUser);
+
+            document.getElementById('queue-container').appendChild(queueItemContainer);
+        });
+    }
 });
 
 function togglePlay(){
@@ -25,6 +72,12 @@ function togglePlay(){
 function searchSongs(e){
     e.preventDefault();
     const query = document.getElementById("search-text").value
+
+    const searchItems = document.getElementsByClassName('results-item container');
+
+    while (searchItems.length > 0) {
+        searchItems.item(0).remove();
+    }
     
     chrome.runtime.sendMessage({'command': 'spotifySearch', 'query': query}, function(response){
         console.log(response);
@@ -65,7 +118,11 @@ function searchSongs(e){
             btn.className = "results-item add-btn";
             btn.id = "results-btn-" + element.id;
 
-            btn.addEventListener('click', () => addToQueue(element.id))
+            btn.addEventListener('click', () => addToQueue({
+                'artist': artistStr,
+                'title': element.name,
+                'track_id': element.id
+            }))
 
             resultItemContainer.appendChild(title);
             resultItemContainer.appendChild(artist);
@@ -77,8 +134,8 @@ function searchSongs(e){
     })
 }
 
-function addToQueue(trackId){
-    chrome.runtime.sendMessage({'command': 'addToQueue', 'trackId': trackId})
+function addToQueue(trackObj){
+    chrome.runtime.sendMessage({'command': 'addToQueue', 'trackObj': trackObj})
 }
 
 function openSettings(){
