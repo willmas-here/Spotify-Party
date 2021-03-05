@@ -78,7 +78,7 @@ function searchSongs(e){
 }
 
 function addToQueue(trackId){
-
+    chrome.runtime.sendMessage({'command': 'addToQueue', 'trackId': trackId})
 }
 
 function openSettings(){

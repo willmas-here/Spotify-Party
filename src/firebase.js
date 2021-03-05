@@ -21,7 +21,18 @@ window.addEventListener("load", function(){
 
     database = firebase.database();
 
-    // spotify auth
+    // if in party
+    chrome.storage.sync.get(['inParty']['partyCode'], function(result) {
+        if(result.inParty === true){
+            partyCode = result.partyCode;
+            
+            const partyQueueRef = database.ref('queues/' + partyCode);
+            console.log(partyQueueRef)
+            partyQueueRef.on('value', (snapshot) => {
+                queue = snapshot.val();
+            })
+        }
+    });    
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, response){
@@ -43,8 +54,9 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         })
     };
 
-    if(msg.command === ""){
-
+    if(msg.command === "addToQueue"){
+        // add to queue
+        addToQueue(msg.trackId)
     };
 
     
@@ -132,14 +144,45 @@ async function createParty(){
     .catch(function(error) {
         console.log('Users set error', error);
     });
+
+
+    const partyQueueRef = database.ref('queues/' + partyCode);
+    console.log(partyQueueRef)
+    partyQueueRef.on('value', (snapshot) => {
+        queue = snapshot.val();
+    })
     
     // open party screen - do it in popup
     chrome.storage.sync.set({inParty: true, partyCode:partyCode},function(){
         console.log('Party Code ' + partyCode + ' saved to storage')
     });
+    
     return partyCode
+
+    
 }
 
 async function joinParty(partyCode){
     // joinParty
+}
+
+function addToQueue(artist, title, track_id){
+    // get last index
+    let queueIndex;
+    if (typeof(queue) === "object"){
+        queueIndex = Object.keys(queue).length;
+    } else {
+        queueIndex = 0;
+    }
+
+    // update new index
+    const queueItem = {
+        'artist': artist,
+        'title': title,
+        'track_id': track_id,
+        'user': firebase.auth().currentUser.uid
+    };
+
+    const partyQueueRef = database.ref('queues/' + partyCode);
+    partyQueueRef.child(queueIndex).set(queueItem);
 }
