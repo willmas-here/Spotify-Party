@@ -141,6 +141,36 @@ async function spotifyLogin(){
     });
 }
 
+async function requestNewToken(){
+    let body = new URLSearchParams();
+    body.append('grant_type', 'refresh_token');
+    body.append('refresh_token', refresh_token);
+    body.append('client_id', 'a1c309e78e4c4cac8eb5f87d7f74a3c4');
+
+    let json;
+
+    try{
+        const response = await fetch('https://accounts.spotify.com/api/token', {
+            method: 'POST',
+            body: body
+        });
+
+        json = await response.json()
+        console.log(json)
+    } catch (err) {
+        console.error(err)
+    }
+
+    access_token = json.access_token;
+    refresh_token = json.refresh_token;
+    chrome.storage.sync.set({
+        access_token: json.access_token,
+        refresh_token: json.refresh_token,
+    }, function(){
+        console.log('tokens saved to storage');
+    });
+}
+
 function getUserPlayback(){
     fetch('https://api.spotify.com/v1/me/player', {
         method: 'GET',
