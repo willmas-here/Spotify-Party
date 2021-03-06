@@ -138,6 +138,8 @@ async function spotifyLogin(){
             });
         })
         .catch(error => console.log(error))
+
+        return true
     });
 }
 
@@ -149,105 +151,174 @@ async function requestNewToken(){
 
     let json;
 
-    try{
-        const response = await fetch('https://accounts.spotify.com/api/token', {
-            method: 'POST',
-            body: body
-        });
-
-        json = await response.json()
-        console.log(json)
-    } catch (err) {
-        console.error(err)
-    }
-
-    access_token = json.access_token;
-    refresh_token = json.refresh_token;
-    chrome.storage.sync.set({
-        access_token: json.access_token,
-        refresh_token: json.refresh_token,
-    }, function(){
-        console.log('tokens saved to storage');
+    const response = await fetch('https://accounts.spotify.com/api/token', {
+        method: 'POST',
+        body: body
     });
+
+    json = await response.json()
+    console.log(json)
+
+    if (response.status === 400){
+        await spotifyLogin();
+        return true
+    } else{
+        access_token = json.access_token;
+        refresh_token = json.refresh_token;
+        chrome.storage.sync.set({
+            access_token: json.access_token,
+            refresh_token: json.refresh_token,
+        }, function(){
+            console.log('tokens saved to storage');
+        });
+    }
 }
 
-function getUserPlayback(){
-    fetch('https://api.spotify.com/v1/me/player', {
+async function getUserPlayback(){
+    let response = await fetch('https://api.spotify.com/v1/me/player', {
         method: 'GET',
         headers: {
             'Authorization': 'Bearer ' + access_token,
         }
-    })
-    .then(response => response.json())
-    .then(json => console.log(json))
-    .catch(error => console.log(error))
+    });
+    
+    if (response.status === 401){
+        console.error(await response.json());
+
+        await requestNewToken();
+
+        response = await fetch('https://api.spotify.com/v1/me/player', {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + access_token,
+            }
+        });
+    }
+
+    const json = await response.json();
+    console.log(json);
 }
 
-function startPlayback(uris, position_ms=0){
-    if (song===undefined) {
-        fetch('https://api.spotify.com/v1/me/player/play', {
+async function startPlayback(uris, position_ms=0){
+    let options = {
+        method: 'PUT',
+        headers: {
+            'Authorization': 'Bearer ' + access_token
+        }
+    }
+
+    if(uris !== undefined){
+        options.body = {
+            'uris': uris,
+            'position_ms': position_ms
+        }
+    }
+
+    const response = await fetch('https://api.spotify.com/v1/me/player/play', options);
+
+    if (response.status === 401){
+        console.error(await response.json());
+
+        await requestNewToken();
+
+        await fetch('https://api.spotify.com/v1/me/player/play', options);
+    }
+}
+
+async function pausePlayback(){
+    const response = await fetch('https://api.spotify.com/v1/me/player/pause', {
+        method: 'PUT',
+        headers: {
+            'Authorization': 'Bearer ' + access_token
+        }
+    });
+
+    if (response.status === 401){
+        console.error(await response.json());
+        
+        await requestNewToken();
+        
+        await fetch('https://api.spotify.com/v1/me/player/pause', {
+        method: 'PUT',
+        headers: {
+            'Authorization': 'Bearer ' + access_token
+        }
+    });
+    }
+}
+
+async function seekPlayback(position_ms){
+    let url = new URL('https://api.spotify.com/v1/me/player/seek');
+    url.searchParams.append('position_ms', position_ms);
+
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Authorization': 'Bearer ' + access_token
+        }
+    });
+
+    if (response.status === 401){
+        console.error(await response.json());
+        await requestNewToken();
+
+        await fetch(url, {
             method: 'PUT',
             headers: {
                 'Authorization': 'Bearer ' + access_token
-            },
-        });
-    } else {
-        fetch('https://api.spotify.com/v1/me/player/play', {
-            method: 'PUT',
-            headers: {
-                'Authorization': 'Bearer ' + access_token
-            },
-            body: {
-                'uris': uris,
-                'position_ms': position_ms
             }
         });
     }
 }
 
-function pausePlayback(){
-    fetch('https://api.spotify.com/v1/me/player/pause', {
-        method: 'PUT',
-        headers: {
-            'Authorization': 'Bearer ' + access_token
-        }
-    })
-}
-
-function seekPlayback(position_ms){
-    let url = new URL('https://api.spotify.com/v1/me/player/seek');
-    url.searchParams.append('position_ms', position_ms);
-
-    fetch(url, {
-        method: 'PUT',
-        headers: {
-            'Authorization': 'Bearer ' + access_token
-        }
-    });
-}
-
-function toggleShuffle(toggle=false){
+async function toggleShuffle(toggle=false){
     let url = new URL('https://api.spotify.com/v1/me/player/shuffle');
     url.searchParams.append('state', toggle);
-
-    fetch(url, {
+    const response = await fetch(url, {
         method: 'PUT',
         headers: {
             'Authorization': 'Bearer ' + access_token
         }
     });
+    if (response.status === 401){
+        console.error(await response.json());
+        await requestNewToken();
+
+        await fetch(url, {
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + access_token
+            }
+        });
+    }
 }
 
 async function search(query){
     let url = new URL('https://api.spotify.com/v1/search');
     url.searchParams.append('q', query);
     url.searchParams.append('type', 'track');
+    let response;
 
-    const response = await fetch(url, {
+    response = await fetch(url, {
         method: 'GET',
         headers: {
             'Authorization': 'Bearer ' + access_token
         }
     });
-    return await response.json()
+
+    if (response.status === 200){
+        return await response.json();
+
+    } else if (response.status === 401){
+        await requestNewToken()
+        response = await fetch(url, {
+            method: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + access_token
+            }
+        });
+        return await response.json();
+    } else {
+        console.error('search fetch error');
+    }
 }
