@@ -72,13 +72,9 @@ function searchSongs(e){
             title.className = "results-item title";
             title.innerText = element.name;
 
-            let artistStr = '';
-            for (let index = 0; index < element.artists.length; index++) {
-                if (index == 0){
-                    artistStr = element.artists[index].name;
-                } else {
-                    artistStr += ", " + element.artists[index].name;
-                }
+            let artistStr = element.artists[0].name;
+            for (let index = 1; index < element.artists.length; index++) {
+                artistStr += ", " + element.artists[index].name;
             }
 
             let artist = document.createElement('p');
@@ -90,11 +86,7 @@ function searchSongs(e){
             btn.className = "results-item add-btn";
             btn.id = "results-btn-" + element.id;
 
-            btn.addEventListener('click', () => addToQueue({
-                'artist': artistStr,
-                'title': element.name,
-                'track_id': element.id
-            }))
+            btn.addEventListener('click', () => addToQueue(element))
 
             resultItemContainer.appendChild(title);
             resultItemContainer.appendChild(artist);
@@ -122,7 +114,7 @@ function updateQueue(queueObj){
     queueObj.forEach((element, i) => {
         let queueItemContainer = document.createElement('div');
         queueItemContainer.className = "queue-item-container";
-        queueItemContainer.id = "queue-container-" + decodeURIComponent(element.track_id) + '-' + i;
+        queueItemContainer.id = "queue-container-" + element.track_obj.id + '-' + i;
 
         let queueItemIndex = document.createElement('p');
         queueItemIndex.className = "queue-item index";
@@ -130,15 +122,20 @@ function updateQueue(queueObj){
 
         let queueItemTitle = document.createElement('p');
         queueItemTitle.className = "queue-item title";
-        queueItemTitle.innerText = decodeURIComponent(element.title);
+        queueItemTitle.innerText = element.track_obj.name;
 
+        
+        let artistStr = element.track_obj.artists[0].name;
+        for (let index = 1; index < element.track_obj.artists.length; index++) {
+            artistStr += ", " + element.track_obj.artists[index].name;
+        }
         let queueItemArtist = document.createElement('p');
         queueItemArtist.className = "queue-item artist";
-        queueItemArtist.innerText = decodeURIComponent(element.artist);
+        queueItemArtist.innerText = artistStr;
 
         let queueItemUser = document.createElement('p');
         queueItemUser.className = "queue-item user";
-        queueItemUser.innerText = decodeURIComponent(element.user);
+        queueItemUser.innerText = element.user;
 
         queueItemContainer.appendChild(queueItemIndex);
         queueItemContainer.appendChild(queueItemTitle);

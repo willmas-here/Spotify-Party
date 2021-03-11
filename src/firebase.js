@@ -207,7 +207,7 @@ function onStateChange(snapshot){
         // play music
         let uris = []
         queue.slice(state.current_index).forEach(element => {
-            uris.push('spotify:track:' + element.track_id)
+            uris.push(element.track_obj.uri);
         });
         startPlayback(uris, state.current_loc);
     } else {
@@ -233,9 +233,7 @@ function addToQueue(trackObj){
 
     // update new index
     const queueItem = {
-        'artist': encodeURIComponent(trackObj.artist),
-        'title': encodeURIComponent(trackObj.title),
-        'track_id': encodeURIComponent(trackObj.track_id),
+        'track_obj': trackObj,
         'user': firebase.auth().currentUser.uid
     };
 
