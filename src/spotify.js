@@ -141,6 +141,8 @@ async function spotifyLogin(){
         })
         .catch(error => console.log(error))
 
+        toggleShuffle(false);
+
         return true
     });
 }
@@ -210,11 +212,13 @@ async function startPlayback(uris, position_ms=0){
     }
 
     if(uris !== undefined){
-        options.body = {
+        options.body = JSON.stringify({
             'uris': uris,
             'position_ms': position_ms
-        }
+        });
     }
+
+    console.log(options)
 
     const response = await fetch('https://api.spotify.com/v1/me/player/play', options);
 
@@ -224,6 +228,10 @@ async function startPlayback(uris, position_ms=0){
         await requestNewToken();
 
         await fetch('https://api.spotify.com/v1/me/player/play', options);
+    }
+
+    if (response.status === 400){
+        console.error(await response.json());
     }
 }
 
@@ -241,11 +249,11 @@ async function pausePlayback(){
         await requestNewToken();
         
         await fetch('https://api.spotify.com/v1/me/player/pause', {
-        method: 'PUT',
-        headers: {
-            'Authorization': 'Bearer ' + access_token
-        }
-    });
+            method: 'PUT',
+            headers: {
+                'Authorization': 'Bearer ' + access_token
+            }
+        });
     }
 }
 

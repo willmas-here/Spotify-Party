@@ -70,7 +70,7 @@ async function createParty(){
     // refs
     const attributesRef = database.ref('attributes/');
     const queuesRef = database.ref('queues/');
-    const statusRef = database.ref('status/');
+    const stateRef = database.ref('state/');
     const usersRef = database.ref('users/');
 
     // make a code (test to make sure unique)
@@ -100,12 +100,12 @@ async function createParty(){
         "host": uid,
         "permissions": {
             "change_queue": "everybody",
-            "change_status": "everybody"
+            "change_state": "everybody"
         },
         "time_created": Date.now()
     };
 
-    const status = {
+    const state = {
         "status": "pause",
         "current_index": "0",
         "current_loc": "0"
@@ -118,7 +118,7 @@ async function createParty(){
     try {
         await attributesRef.child(partyCode).set(attributes)
         await queuesRef.child(partyCode).set(true);
-        await statusRef.child(partyCode).set(status)
+        await stateRef.child(partyCode).set(state)
         await usersRef.child(partyCode).set(users)
     } catch(err) {
         console.error(err)
@@ -154,16 +154,16 @@ function leaveParty(){
     // remove db listeners
     const attributesRef = database.ref('attributes/').child(partyCode);
     const queueRef = database.ref('queues/').child(partyCode);
-    const statusRef = database.ref('status/').child(partyCode);
+    const stateRef = database.ref('state/').child(partyCode);
     const usersRef = database.ref('users/').child(partyCode);
     attributesRef.off('value');
     queueRef.off('value');
-    statusRef.off('value');
+    stateRef.off('value');
     usersRef.off('value');
 
     attributes = null;
     queue = null;
-    status = null;
+    state = null;
     users = null;
 
     chrome.storage.sync.set({inParty: false, partyCode: null});
@@ -175,11 +175,11 @@ function leaveParty(){
 function addFirebaseListeners(){
     const attributesRef = database.ref('attributes/').child(partyCode);
     const queueRef = database.ref('queues/').child(partyCode);
-    const statusRef = database.ref('status/').child(partyCode);
+    const stateRef = database.ref('state/').child(partyCode);
     const usersRef = database.ref('users/').child(partyCode);
     attributesRef.on('value', (snapshot) => onAttributesChange(snapshot));
     queueRef.on('value', (snapshot) => onQueueChange(snapshot));
-    statusRef.on('value', (snapshot) => onStatusChange(snapshot));
+    stateRef.on('value', (snapshot) => onStateChange(snapshot));
     usersRef.on('value', (snapshot) => onUserChange(snapshot));
 }
 
@@ -200,8 +200,22 @@ function onQueueChange(snapshot){
     }
 }
 
-function onStatusChange(snapshot){
-    status = snapshot.val();
+function onStateChange(snapshot){
+    state = snapshot.val();
+
+    if (state.status === 'play'){
+        // play music
+        let uris = []
+        queue.slice(state.current_index).forEach(element => {
+            uris.push('spotify:track:' + element.track_id)
+        });
+        startPlayback(uris, state.current_loc);
+    } else {
+        // pause music
+        pausePlayback();
+    }
+
+
 }
 
 function onUserChange(snapshot){
@@ -227,4 +241,23 @@ function addToQueue(trackObj){
 
     const partyQueueRef = database.ref('queues/' + partyCode);
     partyQueueRef.child(queueIndex).set(queueItem);
+}
+
+function updateState(status, current_loc, current_index){
+    let newState = {};
+
+    if (typeof(status) !== undefined){
+        newState.status = status;
+    }
+
+    if (typeof(current_loc) !== undefined){
+        newState.current_loc = current_loc;
+    }
+
+    if (typeof(current_index) !== undefined){
+        newState.current_index = current_index;
+    }
+    
+    console.log(newState);
+    database.ref('state/').child(partyCode).update(newState);
 }
