@@ -196,7 +196,7 @@ async function getUserPlayback(){
     }
 
     const json = await response.json();
-    console.log(json);
+    return json;
 }
 
 async function startPlayback(uris, position_ms=0){

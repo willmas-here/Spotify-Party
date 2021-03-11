@@ -26,7 +26,7 @@ window.addEventListener("load", function(){
         if(result.inParty === true){
             partyCode = result.partyCode;
             
-            updateQueue();
+            getQueue();
         }
     });    
 });
@@ -56,7 +56,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
     };
 
     if(msg.command === 'openBrowser'){
-        updateQueue();
+        getQueue();
     }
 });
 
@@ -74,17 +74,19 @@ async function createParty(){
         console.log("No data available");
 
     let validCode = false;
-    let partyCode = 0;
+    let tempPartyCode = 0;
 
     while (!validCode){
-        partyCode = Math.floor(Math.random() * (1000000-100000) + 100000);
+        tempPartyCode = Math.floor(Math.random() * (1000000-100000) + 100000);
 
-        if(!snapshot.child(partyCode).exists()){
+        if(!snapshot.child(tempPartyCode).exists()){
             validCode = true;
-            console.log("Party Code =", partyCode)
+            console.log("Party Code =", tempPartyCode)
         } else
-            console.log(partyCode, "already exists");
+            console.log(tempPartyCode, "already exists");
     }
+
+    partyCode = tempPartyCode
 
     // create party in db
     const uid = firebase.auth().currentUser.uid;
@@ -97,13 +99,9 @@ async function createParty(){
         "time_created": Date.now()
     };
 
-    const queues = {
-        "0": false
-    };
-
     const status = {
         "status": "pause",
-        "current_track": "0",
+        "current_index": "0",
         "current_loc": "0"
     };
 
@@ -119,13 +117,13 @@ async function createParty(){
         console.log('Attributes set error', error);
     });
 
-    queuesRef.child(partyCode).set(queues)
-    .then(function(){
-        console.log('Queue successfully set');
-    })
-    .catch(function(error) {
-        console.log('Queue set error', error);
-    });
+    // queuesRef.child(partyCode).set(queues)
+    // .then(function(){
+    //     console.log('Queue successfully set');
+    // })
+    // .catch(function(error) {
+    //     console.log('Queue set error', error);
+    // });
 
     statusRef.child(partyCode).set(status)
     .then(function(){
@@ -143,7 +141,7 @@ async function createParty(){
         console.log('Users set error', error);
     });
 
-    updateQueue();
+    getQueue();
     
     // open party screen - do it in popup
     chrome.storage.sync.set({inParty: true, partyCode:partyCode},function(){
@@ -151,24 +149,52 @@ async function createParty(){
     });
     
     return partyCode
-
-    
 }
 
 async function joinParty(partyCode){
-    // joinParty
+    // set db stuffs
+    const uid = firebase.auth().currentUser.uid;
+
+    database.ref('users/').child(partyCode).child(uid).set(true)
+    .then(() => console.log('set user'))
+
+    // get db stuffs
+    addFirebaseListeners();
 }
 
-function updateQueue(){
-    const partyQueueRef = database.ref('queues/' + partyCode);
-    console.log(partyQueueRef)
-    partyQueueRef.on('value', (snapshot) => {
-        queue = snapshot.val();
-        
-        chrome.runtime.sendMessage({'command': 'updateQueue', 'queueObj': queue}, function(response){
-            console.log(response);
-        });
+function leaveParty(){
+
+}
+
+function addFirebaseListeners(){
+    const attributesRef = database.ref('attributes/').child(partyCode);
+    const queueRef = database.ref('queues/').child(partyCode);
+    const statusRef = database.ref('status/').child(partyCode);
+    const usersRef = database.ref('users/').child(partyCode);
+    attributesRef.on('value', (snapshot) => getAttributes(snapshot));
+    queueRef.on('value', (snapshot) => getQueue(snapshot));
+    statusRef.on('value', (snapshot) => getStatus(snapshot));
+    usersRef.on('value', (snapshot) => getUsers(snapshot));
+}
+
+function getAttributes(snapshot){
+    attributes = snapshot.val()
+}
+
+function getQueue(snapshot){
+    queue = snapshot.val();
+    
+    chrome.runtime.sendMessage({'command': 'updateQueue', 'queueObj': queue}, function(response){
+        console.log(response);
     });
+}
+
+function getStatus(snapshot){
+    status = snapshot.val();
+}
+
+function getUsers(snapshot){
+    users = snapshot.val()
 }
 
 function addToQueue(trackObj){
