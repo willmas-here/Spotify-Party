@@ -7,15 +7,17 @@ window.addEventListener("load", function(){
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, response){
-    console.log(msg);
+    if (msg.recipient === 'spotify'){
+        console.log(msg);
 
-    if (msg.command === 'spotifySearch'){
-        search(msg.query)
-        .then(function(tracks){
-            response({response: "success", tracks: tracks});
-        });
+        if (msg.command === 'spotifySearch'){
+            search(msg.query)
+            .then(function(tracks){
+                response({response: "success", tracks: tracks});
+            });
 
-        return true
+            return true
+        }
     }
 });
 

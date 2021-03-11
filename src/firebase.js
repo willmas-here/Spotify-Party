@@ -25,38 +25,40 @@ window.addEventListener("load", function(){
     chrome.storage.sync.get(['inParty']['partyCode'], function(result) {
         if(result.inParty === true){
             partyCode = result.partyCode;
-            
-            getQueue();
+            addFirebaseListeners();
         }
     });    
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, response){
-    console.log(msg);
-    
-    if(msg.command === "createParty"){
-        createParty()
-        .then(function(partyCode){
-            response({response: "success", partyCode: partyCode});
-        });
-        return true
-    };
-    
-    if(msg.command === "joinParty"){
-        const partyCode = msg.partyCode;
-        const joinPromise = joinParty(partyCode);
-        joinPromise.then(function(){
-            response({response: "success"})
-        })
-    };
+    if (msg.recipient === 'firebase'){
+        console.log(msg);
+        
+        if(msg.command === "createParty"){
+            createParty()
+            .then(function(partyCode){
+                response({response: "success", partyCode: partyCode});
+            });
+            return true
+        };
+        
+        if(msg.command === "joinParty"){
+            const joinPromise = joinParty(msg.partyCode);
+            joinPromise.then(function(){
+                response({response: "success"})
+            })
+        };
 
-    if(msg.command === "addToQueue"){
-        // add to queue
-        addToQueue(msg.trackObj);
-    };
+        if(msg.command === "addToQueue"){
+            // add to queue
+            addToQueue(msg.trackObj);
+        };
 
-    if(msg.command === 'openBrowser'){
-        getQueue();
+        if(msg.command === 'openBrowser'){
+            chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser', 'queueObj': queue}, function(response){
+                console.log(response);
+            });
+        }
     }
 });
 
@@ -109,38 +111,13 @@ async function createParty(){
         [uid]: true
     };
 
-    attributesRef.child(partyCode).set(attributes)
-    .then(function(){
-        console.log('Attributes successfully set');
-    })
-    .catch(function(error) {
-        console.log('Attributes set error', error);
-    });
-
-    // queuesRef.child(partyCode).set(queues)
-    // .then(function(){
-    //     console.log('Queue successfully set');
-    // })
-    // .catch(function(error) {
-    //     console.log('Queue set error', error);
-    // });
-
-    statusRef.child(partyCode).set(status)
-    .then(function(){
-        console.log('Status successfully set');
-    })
-    .catch(function(error) {
-        console.log('Status set error', error);
-    });
-
-    usersRef.child(partyCode).set(users)
-    .then(function(){
-        console.log('Users successfully set');
-    })
-    .catch(function(error) {
-        console.log('Users set error', error);
-    });
-
+    try {
+        await attributesRef.child(partyCode).set(attributes)
+        await statusRef.child(partyCode).set(status)
+        await usersRef.child(partyCode).set(users)
+    } catch(err) {
+        console.error(err)
+    }
     getQueue();
     
     // open party screen - do it in popup
@@ -184,7 +161,7 @@ function getAttributes(snapshot){
 function getQueue(snapshot){
     queue = snapshot.val();
     
-    chrome.runtime.sendMessage({'command': 'updateQueue', 'queueObj': queue}, function(response){
+    chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue}, function(response){
         console.log(response);
     });
 }
