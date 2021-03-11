@@ -13,6 +13,9 @@ window.addEventListener('load', function(){
             window.open(chrome.runtime.getURL('options.html'));
         }
     });
+    document.getElementById('leave-btn').addEventListener('click', function(){
+        chrome.runtime.sendMessage({command: 'leaveParty', recipient: 'browser'});
+    })
 
     document.getElementById("menu").style.display = "none";
 
@@ -26,6 +29,10 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
 
         if (msg.command === 'updateQueue'){
             updateQueue(msg.queueObj);
+        }
+
+        if (msg.command === 'leaveParty'){
+            window.close()
         }
     }
 });

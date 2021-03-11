@@ -16,6 +16,9 @@ window.addEventListener('load', function(){
             window.open(chrome.runtime.getURL('options.html'));
         }
     });
+    document.getElementById('leave-btn').addEventListener('click', function() {
+        chrome.runtime.sendMessage({command: 'leaveParty', recipient: 'firebase'});
+    });
 
     // hiding things
     document.getElementById("settings-menu").style.display = "none";
@@ -29,6 +32,14 @@ window.addEventListener('load', function(){
         }
     });    
 });
+
+chrome.runtime.onMessage.addListener(function(msg, sender, response){
+    if (msg.recipient === 'popup'){
+        if (msg.command === 'leaveParty'){
+            leaveParty();
+        }
+    }
+})
 
 function changePage(newPage) {
     const menu = document.getElementById("menu");
@@ -61,7 +72,7 @@ function joinParty(){
 };
 
 function createParty(){
-    chrome.runtime.sendMessage({command: "createParty"}, function(response){
+    chrome.runtime.sendMessage({command: "createParty", recipient: 'firebase'}, function(response){
         console.log(response);
         if(response.response !== 'success'){
             console.error('Create Party Failed')
@@ -70,6 +81,10 @@ function createParty(){
         console.log('create party');    
     });
 };
+
+function leaveParty(){
+    changePage('menu');
+}
 
 function openSettings(){
     document.getElementById("settings-menu").style.display = "block";
@@ -94,7 +109,7 @@ function submitForm(e){
 
 
     // send to background script to join
-    chrome.runtime.sendMessage({command: "joinParty", partyCode: code}, function(response){
+    chrome.runtime.sendMessage({command: "joinParty", recipient: 'firebase', partyCode: code}, function(response){
         console.log(response);
     })
     

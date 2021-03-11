@@ -59,6 +59,10 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
                 console.log(response);
             });
         }
+
+        if(msg.command === 'leaveParty'){
+            leaveParty();
+        }
     }
 });
 
@@ -113,12 +117,13 @@ async function createParty(){
 
     try {
         await attributesRef.child(partyCode).set(attributes)
+        await queuesRef.child(partyCode).set(true);
         await statusRef.child(partyCode).set(status)
         await usersRef.child(partyCode).set(users)
     } catch(err) {
         console.error(err)
     }
-    getQueue();
+    addFirebaseListeners();
     
     // open party screen - do it in popup
     chrome.storage.sync.set({inParty: true, partyCode:partyCode},function(){
@@ -129,18 +134,42 @@ async function createParty(){
 }
 
 async function joinParty(partyCode){
-    // set db stuffs
+    // set user = true
     const uid = firebase.auth().currentUser.uid;
 
     database.ref('users/').child(partyCode).child(uid).set(true)
     .then(() => console.log('set user'))
 
-    // get db stuffs
+    // set db listeners
     addFirebaseListeners();
 }
 
 function leaveParty(){
+    // set user = false
+    const uid = firebase.auth().currentUser.uid;
 
+    database.ref('users/').child(partyCode).child(uid).remove()
+    .then(() => console.log('removed user'))
+
+    // remove db listeners
+    const attributesRef = database.ref('attributes/').child(partyCode);
+    const queueRef = database.ref('queues/').child(partyCode);
+    const statusRef = database.ref('status/').child(partyCode);
+    const usersRef = database.ref('users/').child(partyCode);
+    attributesRef.off('value');
+    queueRef.off('value');
+    statusRef.off('value');
+    usersRef.off('value');
+
+    attributes = null;
+    queue = null;
+    status = null;
+    users = null;
+
+    chrome.storage.sync.set({inParty: false, partyCode: null});
+
+    chrome.runtime.sendMessage({'command': 'leaveParty', 'recipient': 'browser'});
+    chrome.runtime.sendMessage({'command': 'leaveParty', 'recipient': 'popup'});
 }
 
 function addFirebaseListeners(){
@@ -148,29 +177,34 @@ function addFirebaseListeners(){
     const queueRef = database.ref('queues/').child(partyCode);
     const statusRef = database.ref('status/').child(partyCode);
     const usersRef = database.ref('users/').child(partyCode);
-    attributesRef.on('value', (snapshot) => getAttributes(snapshot));
-    queueRef.on('value', (snapshot) => getQueue(snapshot));
-    statusRef.on('value', (snapshot) => getStatus(snapshot));
-    usersRef.on('value', (snapshot) => getUsers(snapshot));
+    attributesRef.on('value', (snapshot) => onAttributesChange(snapshot));
+    queueRef.on('value', (snapshot) => onQueueChange(snapshot));
+    statusRef.on('value', (snapshot) => onStatusChange(snapshot));
+    usersRef.on('value', (snapshot) => onUserChange(snapshot));
 }
 
-function getAttributes(snapshot){
+function onAttributesChange(snapshot){
     attributes = snapshot.val()
 }
 
-function getQueue(snapshot){
-    queue = snapshot.val();
-    
-    chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue}, function(response){
-        console.log(response);
-    });
+function onQueueChange(snapshot){
+    try{
+        queue = snapshot.val();
+        
+        chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue}, function(response){
+            console.log(response);
+        });
+    } catch(err) {
+        queue = undefined;
+        console.error(err)
+    }
 }
 
-function getStatus(snapshot){
+function onStatusChange(snapshot){
     status = snapshot.val();
 }
 
-function getUsers(snapshot){
+function onUserChange(snapshot){
     users = snapshot.val()
 }
 
