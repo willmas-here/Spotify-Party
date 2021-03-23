@@ -151,7 +151,7 @@ async function joinParty(inputPartyCode){
     // set user = true
     const uid = firebase.auth().currentUser.uid;
 
-    database.ref('users/').child(inputPartyCode).child(uid).set(true)
+    database.ref('parties/users/').child(inputPartyCode).child(uid).set(true)
     .then(() => console.log('set user'))
 
     // set db listeners
@@ -173,10 +173,10 @@ function leaveParty(){
     .then(() => console.log('removed user'))
 
     // remove db listeners
-    const attributesRef = database.ref('attributes/').child(globalPartyCode);
-    const queueRef = database.ref('queues/').child(globalPartyCode);
-    const stateRef = database.ref('state/').child(globalPartyCode);
-    const usersRef = database.ref('users/').child(globalPartyCode);
+    const attributesRef = database.ref('parties/attributes/').child(globalPartyCode);
+    const queueRef = database.ref('parties/queues/').child(globalPartyCode);
+    const stateRef = database.ref('parties/state/').child(globalPartyCode);
+    const usersRef = database.ref('parties/users/').child(globalPartyCode);
     attributesRef.off('value');
     queueRef.off('value');
     stateRef.off('value');
@@ -194,10 +194,10 @@ function leaveParty(){
 }
 
 function addFirebaseListeners(){
-    const attributesRef = database.ref('attributes/').child(globalPartyCode);
-    const queueRef = database.ref('queues/').child(globalPartyCode);
-    const stateRef = database.ref('state/').child(globalPartyCode);
-    const usersRef = database.ref('users/').child(globalPartyCode);
+    const attributesRef = database.ref('parties/attributes/').child(globalPartyCode);
+    const queueRef = database.ref('parties/queues/').child(globalPartyCode);
+    const stateRef = database.ref('parties/state/').child(globalPartyCode);
+    const usersRef = database.ref('parties/users/').child(globalPartyCode);
     attributesRef.on('value', (snapshot) => onAttributesChange(snapshot));
     queueRef.on('value', (snapshot) => onQueueChange(snapshot));
     stateRef.on('value', (snapshot) => onStateChange(snapshot));
@@ -258,7 +258,7 @@ function addToQueue(trackObj){
         'user': firebase.auth().currentUser.uid
     };
 
-    const partyQueueRef = database.ref('queues/' + globalPartyCode);
+    const partyQueueRef = database.ref('parties/queues/' + globalPartyCode);
     partyQueueRef.child(queueIndex).set(queueItem);
 }
 
@@ -287,5 +287,5 @@ function updateState(status, current_loc, current_index){
     }
     
     console.log(newState);
-    database.ref('state/').child(globalPartyCode).update(newState);
+    database.ref('parties/state/').child(globalPartyCode).update(newState);
 }
