@@ -29,10 +29,12 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
 
         if (msg.command === 'updateQueue'){
             updateQueue(msg.queueObj);
+            response({'response': 'success'});
         }
 
         if (msg.command === 'leaveParty'){
             window.close()
+            response({'response': 'success'});
         }
     }
 });

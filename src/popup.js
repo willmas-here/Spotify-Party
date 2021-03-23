@@ -37,6 +37,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
     if (msg.recipient === 'popup'){
         if (msg.command === 'leaveParty'){
             leaveParty();
+            response({'response': 'success'});
         }
     }
 })

@@ -37,31 +37,34 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         if(msg.command === "createParty"){
             createParty()
             .then(function(partyCode){
-                response({response: "success", partyCode: partyCode});
+                response({'response': "success", partyCode: partyCode});
             });
-            return true
+            return true;
         };
         
         if(msg.command === "joinParty"){
             const joinPromise = joinParty(msg.partyCode);
             joinPromise.then(function(){
-                response({response: "success"})
+                response({'response': "success"});
             })
         };
 
         if(msg.command === "addToQueue"){
             // add to queue
             addToQueue(msg.trackObj);
+            response({'response': 'success'});
         };
 
         if(msg.command === 'openBrowser'){
             chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser', 'queueObj': queue}, function(response){
                 console.log(response);
+                response({'response': 'success'});
             });
         }
 
         if(msg.command === 'leaveParty'){
             leaveParty();
+            response({'response': 'success'});
         }
     }
 });
@@ -241,6 +244,10 @@ function addToQueue(trackObj){
     partyQueueRef.child(queueIndex).set(queueItem);
 }
 
+function updateStatePause(){
+    
+}
+
 function updateState(status, current_loc, current_index){
     let newState = {};
 
@@ -254,6 +261,11 @@ function updateState(status, current_loc, current_index){
 
     if (typeof(current_index) !== undefined){
         newState.current_index = current_index;
+    }
+
+
+    if (status === 'pause'){
+        //save current loc
     }
     
     console.log(newState);

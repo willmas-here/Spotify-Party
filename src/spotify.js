@@ -13,7 +13,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         if (msg.command === 'spotifySearch'){
             search(msg.query)
             .then(function(tracks){
-                response({response: "success", tracks: tracks});
+                response({'response': "success", tracks: tracks});
             });
 
             return true
