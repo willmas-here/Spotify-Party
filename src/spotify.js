@@ -1,18 +1,44 @@
-let access_token, refresh_token, last_token_refresh_time;
+let access_token, refresh_token, last_token_refresh_time, global_device_id;
 
-window.addEventListener("load", function(){
+// initialize player
+window.onSpotifyWebPlaybackSDKReady = function(){
+    const player = new Spotify.Player({
+        name: 'Music Party',
+        getOAuthToken: cb => { cb(access_token); }
+    });
+
+    // Error handling
+    player.addListener('initialization_error', ({ message }) => { console.error(message); });
+    player.addListener('authentication_error', ({ message }) => { console.error(message); });
+    player.addListener('account_error', ({ message }) => { console.error(message); });
+    player.addListener('playback_error', ({ message }) => { console.error(message); });
+    
+    // Playback status updates
+    player.addListener('player_state_changed', state => { console.log(state); });
+
+    // Ready
+    player.addListener('ready', ({ device_id }) => {
+        console.log('Ready with Device ID', device_id);
+        global_device_id = device_id;
+    });
+
+    // not ready
+    player.addListener('not_ready', ({ device_id }) => {
+        console.log('Device ID has gone offline', device_id);
+    });
+
+    // connect to player
+    player.connect();
+};
+
+window.addEventListener("load", async function(){
     chrome.storage.sync.get(['access_token', 'refresh_token', 'last_token_refresh_time'], function(objects){
         access_token = objects.access_token;
         refresh_token = objects.refresh_token;
         last_token_refresh_time = objects.last_token_refresh_time;
     });
 
-    if (access_token === undefined || refresh_token === undefined){
-        console.log({'access_token': access_token, 'refresh_token': refresh_token});
-        spotifyLogin();
-    } else if (Date.now() > last_token_refresh_time){
-        requestNewToken();
-    }
+    await testTokenValidity();
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, response){
@@ -83,7 +109,7 @@ async function spotifyLogin(){
     const redirect_uri = chrome.identity.getRedirectURL('spotify_cb/');
     const state = generateState();
     const client_id = 'a1c309e78e4c4cac8eb5f87d7f74a3c4'
-    const scope = 'streaming user-read-playback-state user-modify-playback-state'
+    const scope = 'streaming user-read-email user-read-private user-read-playback-state user-modify-playback-state'
     chrome.storage.sync.set({'state': state});
 
     console.log({'verifier:': verifier, 'challenge': challenge, 'state': state, 'redirect_uri': redirect_uri});
