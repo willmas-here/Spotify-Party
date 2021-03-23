@@ -1,9 +1,18 @@
+let access_token, refresh_token, last_token_refresh_time;
+
 window.addEventListener("load", function(){
-    chrome.storage.sync.get(['access_token', 'refresh_token'], function(objects){
+    chrome.storage.sync.get(['access_token', 'refresh_token', 'last_token_refresh_time'], function(objects){
         access_token = objects.access_token;
         refresh_token = objects.refresh_token;
+        last_token_refresh_time = objects.last_token_refresh_time;
     });
-    
+
+    if (access_token === undefined || refresh_token === undefined){
+        console.log({'access_token': access_token, 'refresh_token': refresh_token});
+        spotifyLogin();
+    } else if (Date.now() > last_token_refresh_time){
+        requestNewToken();
+    }
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, response){
@@ -77,10 +86,7 @@ async function spotifyLogin(){
     const scope = 'streaming user-read-playback-state user-modify-playback-state'
     chrome.storage.sync.set({'state': state});
 
-    console.log('verifier:', verifier);
-    console.log('challenge:', challenge);
-    console.log('state:', state);
-    console.log('redirect_uri:', redirect_uri)
+    console.log({'verifier:': verifier, 'challenge': challenge, 'state': state, 'redirect_uri': redirect_uri});
 
     let authURL = new URL('https://accounts.spotify.com/authorize');
     authURL.searchParams.append('client_id', client_id);
@@ -93,8 +99,8 @@ async function spotifyLogin(){
 
     console.log(authURL.toString());
 
-    chrome.identity.launchWebAuthFlow({'url': authURL.toString(), 'interactive': true}, function(redirect_url){
-        console.log(redirect_url);
+    chrome.identity.launchWebAuthFlow({'url': authURL.toString(), 'interactive': true}, async function(redirect_url){
+        // console.log(redirect_url);
         if(typeof(redirect_url) === undefined){
             console.error('auth error');
             return;
@@ -102,7 +108,7 @@ async function spotifyLogin(){
 
         // extract token
         var params = redirect_url.replace(chrome.identity.getRedirectURL('spotify_cb/?'), '').split('&');
-        console.log(params);
+        // console.log(params);
 
         // check state
         if(params[1].replace('state=', '') !== state){
@@ -114,7 +120,7 @@ async function spotifyLogin(){
         const code = params[0].replace('code=', '');
 
         // get access token
-        const tokenPromise = fetch('https://accounts.spotify.com/api/token', {
+        const tokenPromise = await fetch('https://accounts.spotify.com/api/token', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8'
@@ -125,21 +131,21 @@ async function spotifyLogin(){
                 '&redirect_uri=' + redirect_uri + 
                 '&code_verifier=' + verifier
         });
+        
+        json = await tokenPromise.json();
+        console.log(json);
 
-        tokenPromise
-        .then(response => response.json())
-        .then(json => {
-            console.log(json);
-            access_token = json.access_token;
-            refresh_token = json.refresh_token;
-            chrome.storage.sync.set({
-                access_token: json.access_token,
-                refresh_token: json.refresh_token,
-            }, function(){
-                console.log('tokens saved to storage');
-            });
-        })
-        .catch(error => console.log(error))
+        access_token = json.access_token;
+        refresh_token = json.refresh_token;
+        last_token_refresh_time = Date.now() + json.expires_in * 1000;
+
+        chrome.storage.sync.set({
+            access_token: json.access_token,
+            refresh_token: json.refresh_token,
+            last_token_refresh_time: last_token_refresh_time
+        }, function(){
+            console.log('tokens saved to storage');
+        });
 
         toggleShuffle(false);
 
@@ -169,41 +175,50 @@ async function requestNewToken(){
     } else{
         access_token = json.access_token;
         refresh_token = json.refresh_token;
+        last_token_refresh_time = Date.now() + json.expires_in * 1000;
+        
         chrome.storage.sync.set({
             access_token: json.access_token,
             refresh_token: json.refresh_token,
+            last_token_refresh_time: last_token_refresh_time
         }, function(){
             console.log('tokens saved to storage');
         });
     }
 }
 
+async function testTokenValidity(){
+    if (access_token === undefined || refresh_token === undefined){
+        console.log({'access_token': access_token, 'refresh_token': refresh_token});
+        await spotifyLogin();
+        return;
+    } else if (Date.now() >= last_token_refresh_time){
+        console.log('requesting new token');
+        await requestNewToken();
+        return;
+    } else {
+        console.log('Tokens valid');
+        return
+    }
+}
+
 async function getUserPlayback(){
+    await testTokenValidity();
+
     let response = await fetch('https://api.spotify.com/v1/me/player', {
         method: 'GET',
         headers: {
             'Authorization': 'Bearer ' + access_token,
         }
     });
-    
-    if (response.status === 401){
-        console.error(await response.json());
-
-        await requestNewToken();
-
-        response = await fetch('https://api.spotify.com/v1/me/player', {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + access_token,
-            }
-        });
-    }
 
     const json = await response.json();
     return json;
 }
 
 async function startPlayback(uris, position_ms=0){
+    await testTokenValidity();
+
     let options = {
         method: 'PUT',
         headers: {
@@ -222,42 +237,25 @@ async function startPlayback(uris, position_ms=0){
 
     const response = await fetch('https://api.spotify.com/v1/me/player/play', options);
 
-    if (response.status === 401){
-        console.error(await response.json());
-
-        await requestNewToken();
-
-        await fetch('https://api.spotify.com/v1/me/player/play', options);
-    }
-
     if (response.status === 400){
         console.error(await response.json());
     }
 }
 
 async function pausePlayback(){
+    await testTokenValidity();
+    
     const response = await fetch('https://api.spotify.com/v1/me/player/pause', {
         method: 'PUT',
         headers: {
             'Authorization': 'Bearer ' + access_token
         }
     });
-
-    if (response.status === 401){
-        console.error(await response.json());
-        
-        await requestNewToken();
-        
-        await fetch('https://api.spotify.com/v1/me/player/pause', {
-            method: 'PUT',
-            headers: {
-                'Authorization': 'Bearer ' + access_token
-            }
-        });
-    }
 }
 
 async function seekPlayback(position_ms){
+    await testTokenValidity();
+
     let url = new URL('https://api.spotify.com/v1/me/player/seek');
     url.searchParams.append('position_ms', position_ms);
 
@@ -267,43 +265,25 @@ async function seekPlayback(position_ms){
             'Authorization': 'Bearer ' + access_token
         }
     });
-
-    if (response.status === 401){
-        console.error(await response.json());
-        await requestNewToken();
-
-        await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Authorization': 'Bearer ' + access_token
-            }
-        });
-    }
 }
 
 async function toggleShuffle(toggle=false){
+    await testTokenValidity();
+
     let url = new URL('https://api.spotify.com/v1/me/player/shuffle');
     url.searchParams.append('state', toggle);
+
     const response = await fetch(url, {
         method: 'PUT',
         headers: {
             'Authorization': 'Bearer ' + access_token
         }
     });
-    if (response.status === 401){
-        console.error(await response.json());
-        await requestNewToken();
-
-        await fetch(url, {
-            method: 'PUT',
-            headers: {
-                'Authorization': 'Bearer ' + access_token
-            }
-        });
-    }
 }
 
 async function search(query){
+    await testTokenValidity();
+
     let url = new URL('https://api.spotify.com/v1/search');
     url.searchParams.append('q', query);
     url.searchParams.append('type', 'track');
@@ -319,15 +299,6 @@ async function search(query){
     if (response.status === 200){
         return await response.json();
 
-    } else if (response.status === 401){
-        await requestNewToken()
-        response = await fetch(url, {
-            method: 'GET',
-            headers: {
-                'Authorization': 'Bearer ' + access_token
-            }
-        });
-        return await response.json();
     } else {
         console.error('search fetch error');
     }
