@@ -52,12 +52,17 @@ function searchSongs(e){
     while (searchItems.length > 0) {
         searchItems.item(0).remove();
     }
+
+    if (query === ''){
+        return;
+    }
     
     chrome.runtime.sendMessage({'command': 'spotifySearch', 'recipient': 'spotify', 'query': query}, function(response){
         console.log(response);
 
         if (response.response !== "success"){
-            console.error("Search Failed")
+            console.error("Search Failed");
+            return;
         };
 
         const searchResults = response.tracks.tracks.items;

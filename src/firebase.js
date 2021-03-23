@@ -56,8 +56,8 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         };
 
         if(msg.command === 'openBrowser'){
-            chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser', 'queueObj': queue}, function(response){
-                console.log(response);
+            chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser', 'queueObj': queue}, function(searchResponse){
+                console.log(searchResponse);
                 response({'response': 'success'});
             });
         }
