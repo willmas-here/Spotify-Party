@@ -14,7 +14,7 @@ window.addEventListener('load', function(){
         }
     });
     document.getElementById('leave-btn').addEventListener('click', function(){
-        chrome.runtime.sendMessage({command: 'leaveParty', recipient: 'browser'});
+        chrome.runtime.sendMessage({'command': 'leaveParty', 'recipient': 'firebase'});
     })
 
     document.getElementById("menu").style.display = "none";

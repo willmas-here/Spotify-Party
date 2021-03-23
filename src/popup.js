@@ -39,6 +39,11 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
             leaveParty();
             response({'response': 'success'});
         }
+
+        if (msg.command === 'partyJoined'){
+            changePage('main');
+            response({'response': 'success'});
+        }
     }
 })
 
