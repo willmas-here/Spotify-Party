@@ -1,3 +1,7 @@
+let globalPartyCode;
+let globalPartyAttributes;
+let database;
+
 window.addEventListener("load", function(){
     var firebaseConfig = {
         apiKey: "AIzaSyD1LfJs-oLbdjM3muYUj_77QVPd0V5_ziU",
@@ -24,7 +28,7 @@ window.addEventListener("load", function(){
     // if in party
     chrome.storage.sync.get(['inParty']['partyCode'], function(result) {
         if(result.inParty === true){
-            partyCode = result.partyCode;
+            globalPartyCode = result.partyCode;
             addFirebaseListeners();
         }
     });    
@@ -66,15 +70,19 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
             leaveParty();
             response({'response': 'success'});
         }
+
+        if(msg.command === 'togglePlay'){
+
+        }
     }
 });
 
 async function createParty(){
     // refs
-    const attributesRef = database.ref('attributes/');
-    const queuesRef = database.ref('queues/');
-    const stateRef = database.ref('state/');
-    const usersRef = database.ref('users/');
+    const attributesRef = database.ref('parties/attributes/');
+    const queuesRef = database.ref('parties/queues/');
+    const stateRef = database.ref('parties/state/');
+    const usersRef = database.ref('parties/users/');
 
     // make a code (test to make sure unique)
 
@@ -95,7 +103,7 @@ async function createParty(){
             console.log(tempPartyCode, "already exists");
     }
 
-    partyCode = tempPartyCode
+    globalPartyCode = tempPartyCode
 
     // create party in db
     const uid = firebase.auth().currentUser.uid;
@@ -119,46 +127,56 @@ async function createParty(){
     };
 
     try {
-        await attributesRef.child(partyCode).set(attributes)
-        await queuesRef.child(partyCode).set(true);
-        await stateRef.child(partyCode).set(state)
-        await usersRef.child(partyCode).set(users)
+        await attributesRef.child(globalPartyCode).set(attributes)
+        await queuesRef.child(globalPartyCode).set(true);
+        await stateRef.child(globalPartyCode).set(state)
+        await usersRef.child(globalPartyCode).set(users)
     } catch(err) {
         console.error(err)
     }
     addFirebaseListeners();
     
     // open party screen - do it in popup
-    chrome.storage.sync.set({inParty: true, partyCode:partyCode},function(){
-        console.log('Party Code ' + partyCode + ' saved to storage')
+    chrome.storage.sync.set({inParty: true, partyCode:globalPartyCode},function(){
+        console.log('Party Code ' + globalPartyCode + ' saved to storage', response => console.log(response));
     });
     
-    return partyCode
+    return globalPartyCode
 }
 
-async function joinParty(partyCode){
+async function joinParty(inputPartyCode){
+    // TODO: check if party exists
+
+
     // set user = true
     const uid = firebase.auth().currentUser.uid;
 
-    database.ref('users/').child(partyCode).child(uid).set(true)
+    database.ref('users/').child(inputPartyCode).child(uid).set(true)
     .then(() => console.log('set user'))
 
     // set db listeners
+    globalPartyCode = inputPartyCode;
     addFirebaseListeners();
+
+    chrome.storage.sync.set({inParty: true, partyCode: globalPartyCode}, function(){
+        console.log('Party Code ' + globalPartyCode + ' saved to storage');
+    });
+
+    chrome.runtime.sendMessage({'command': 'partyJoined','recipient': 'popup'});
 }
 
 function leaveParty(){
     // set user = false
     const uid = firebase.auth().currentUser.uid;
 
-    database.ref('users/').child(partyCode).child(uid).remove()
+    database.ref('users/').child(globalPartyCode).child(uid).remove()
     .then(() => console.log('removed user'))
 
     // remove db listeners
-    const attributesRef = database.ref('attributes/').child(partyCode);
-    const queueRef = database.ref('queues/').child(partyCode);
-    const stateRef = database.ref('state/').child(partyCode);
-    const usersRef = database.ref('users/').child(partyCode);
+    const attributesRef = database.ref('attributes/').child(globalPartyCode);
+    const queueRef = database.ref('queues/').child(globalPartyCode);
+    const stateRef = database.ref('state/').child(globalPartyCode);
+    const usersRef = database.ref('users/').child(globalPartyCode);
     attributesRef.off('value');
     queueRef.off('value');
     stateRef.off('value');
@@ -176,10 +194,10 @@ function leaveParty(){
 }
 
 function addFirebaseListeners(){
-    const attributesRef = database.ref('attributes/').child(partyCode);
-    const queueRef = database.ref('queues/').child(partyCode);
-    const stateRef = database.ref('state/').child(partyCode);
-    const usersRef = database.ref('users/').child(partyCode);
+    const attributesRef = database.ref('attributes/').child(globalPartyCode);
+    const queueRef = database.ref('queues/').child(globalPartyCode);
+    const stateRef = database.ref('state/').child(globalPartyCode);
+    const usersRef = database.ref('users/').child(globalPartyCode);
     attributesRef.on('value', (snapshot) => onAttributesChange(snapshot));
     queueRef.on('value', (snapshot) => onQueueChange(snapshot));
     stateRef.on('value', (snapshot) => onStateChange(snapshot));
@@ -187,7 +205,7 @@ function addFirebaseListeners(){
 }
 
 function onAttributesChange(snapshot){
-    attributes = snapshot.val()
+    globalPartyAttributes = snapshot.val()
 }
 
 function onQueueChange(snapshot){
@@ -240,7 +258,7 @@ function addToQueue(trackObj){
         'user': firebase.auth().currentUser.uid
     };
 
-    const partyQueueRef = database.ref('queues/' + partyCode);
+    const partyQueueRef = database.ref('queues/' + globalPartyCode);
     partyQueueRef.child(queueIndex).set(queueItem);
 }
 
@@ -269,5 +287,5 @@ function updateState(status, current_loc, current_index){
     }
     
     console.log(newState);
-    database.ref('state/').child(partyCode).update(newState);
+    database.ref('state/').child(globalPartyCode).update(newState);
 }
