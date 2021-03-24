@@ -264,14 +264,19 @@ function onStateStatusChange(snapshot){
     currentStatus = snapshot.val()
 
     if (currentStatus === 'play'){
-        let uris = []
-        queue.slice(currentIndex).forEach(element => {
-            uris.push(element.track_obj.uri);
-        });
-        startPlayback(uris, currentLoc);
+        // let uris = []
+        // queue.slice(currentIndex).forEach(element => {
+        //     uris.push(element.track_obj.uri);
+        // });
+        // startPlayback(uris, currentLoc);
+
+        player.resume();
+        chrome.runtime.sendMessage({'command': 'onPlay', 'recipient': 'browser'})
     } else {
-        // pause playback
-        pausePlayback();
+        // pausePlayback();
+
+        player.pause();
+        chrome.runtime.sendMessage({'command': 'onPause', 'recipient': 'browser'})
     }
 }
 
