@@ -1,10 +1,13 @@
-let access_token, refresh_token, last_token_refresh_time, global_device_id;
+let access_token, refresh_token, last_token_refresh_time, global_device_id, player;
 
 // initialize player
 window.onSpotifyWebPlaybackSDKReady = function(){
-    const player = new Spotify.Player({
+    player = new Spotify.Player({
         name: 'Music Party',
-        getOAuthToken: cb => { cb(access_token); }
+        getOAuthToken: async cb => {
+            await testTokenValidity();
+            cb(access_token);
+        }
     });
 
     // Error handling
@@ -14,12 +17,17 @@ window.onSpotifyWebPlaybackSDKReady = function(){
     player.addListener('playback_error', ({ message }) => { console.error(message); });
     
     // Playback status updates
-    player.addListener('player_state_changed', state => { console.log(state); });
+    player.addListener('player_state_changed', state => {
+        console.log(state);
+        onPlayerStateChange(state);
+    });
 
     // Ready
     player.addListener('ready', ({ device_id }) => {
         console.log('Ready with Device ID', device_id);
         global_device_id = device_id;
+        setRepeat();
+        toggleShuffle();
     });
 
     // not ready
@@ -31,14 +39,15 @@ window.onSpotifyWebPlaybackSDKReady = function(){
     player.connect();
 };
 
-window.addEventListener("load", async function(){
-    chrome.storage.sync.get(['access_token', 'refresh_token', 'last_token_refresh_time'], function(objects){
+window.addEventListener("load", function(){
+    chrome.storage.sync.get(['access_token', 'refresh_token', 'last_token_refresh_time'], async function(objects){
         access_token = objects.access_token;
         refresh_token = objects.refresh_token;
         last_token_refresh_time = objects.last_token_refresh_time;
-    });
 
-    await testTokenValidity();
+        await testTokenValidity();
+        
+    });
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, response){
@@ -173,8 +182,6 @@ async function spotifyLogin(){
             console.log('tokens saved to storage');
         });
 
-        toggleShuffle(false);
-
         return true
     });
 }
@@ -228,6 +235,28 @@ async function testTokenValidity(){
     }
 }
 
+async function onPlayerStateChange(state){
+    // set shuffle and repeat
+    if (state.shuffle === true){
+        toggleShuffle(false);
+    };
+    if (state.repeat_mode !== 0){
+        setRepeat('off');
+    }
+
+    // test if song has ended
+    // if (
+    //     this.state
+    //     && state.track_window.previous_tracks.find(x => x.id === state.track_window.current_track.id)
+    //     && !this.state.paused
+    //     && state.paused
+    //     ) {
+    //     console.log('Track ended');
+    //     this.setTrackEnd(true);
+    //   }
+    // this.state = state;
+}
+
 async function getUserPlayback(){
     await testTokenValidity();
 
@@ -259,9 +288,12 @@ async function startPlayback(uris, position_ms=0){
         });
     }
 
+    let url = new URL('https://api.spotify.com/v1/me/player/play');
+    url.searchParams.append('device_id', global_device_id);
+
     console.log(options)
 
-    const response = await fetch('https://api.spotify.com/v1/me/player/play', options);
+    const response = await fetch(url, options);
 
     if (response.status === 400){
         console.error(await response.json());
@@ -298,6 +330,20 @@ async function toggleShuffle(toggle=false){
 
     let url = new URL('https://api.spotify.com/v1/me/player/shuffle');
     url.searchParams.append('state', toggle);
+
+    const response = await fetch(url, {
+        method: 'PUT',
+        headers: {
+            'Authorization': 'Bearer ' + access_token
+        }
+    });
+}
+
+async function setRepeat(state='off'){
+    await testTokenValidity();
+
+    let url = new URL('https://api.spotify.com/v1/me/player/repeat');
+    url.searchParams.append('state', state);
 
     const response = await fetch(url, {
         method: 'PUT',

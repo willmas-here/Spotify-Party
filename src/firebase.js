@@ -72,7 +72,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         }
 
         if(msg.command === 'togglePlay'){
-
+            updateStatus();
         }
     }
 });
@@ -187,6 +187,9 @@ function leaveParty(){
     state = null;
     users = null;
 
+    // disconnect spotify player
+    player.disconnect();
+
     chrome.storage.sync.set({inParty: false, partyCode: null});
 
     chrome.runtime.sendMessage({'command': 'leaveParty', 'recipient': 'browser'});
@@ -197,10 +200,15 @@ function addFirebaseListeners(){
     const attributesRef = database.ref('parties/attributes/').child(globalPartyCode);
     const queueRef = database.ref('parties/queues/').child(globalPartyCode);
     const stateRef = database.ref('parties/state/').child(globalPartyCode);
+    const stateIndexRef = stateRef.child('current_index');
+    const stateLocRef = stateRef.child('current_loc');
+    const stateStatusRef = stateRef.child('status');
     const usersRef = database.ref('parties/users/').child(globalPartyCode);
     attributesRef.on('value', (snapshot) => onAttributesChange(snapshot));
     queueRef.on('value', (snapshot) => onQueueChange(snapshot));
-    stateRef.on('value', (snapshot) => onStateChange(snapshot));
+    stateIndexRef.on('value', (snapshot) => onStateIndexChange(snapshot));
+    stateLocRef.on('value', (snapshot) => onStateLocChange(snapshot));
+    stateStatusRef.on('value', (snapshot) => onStateStatusChange(snapshot));
     usersRef.on('value', (snapshot) => onUserChange(snapshot));
 }
 
@@ -221,23 +229,47 @@ function onQueueChange(snapshot){
     }
 }
 
-function onStateChange(snapshot){
-    state = snapshot.val();
+function onStateIndexChange(snapshot){
+    currentIndex = snapshot.val();
+    // change player
+}
 
-    if (state.status === 'play'){
-        // play music
+function onStateLocChange(snapshot){
+    currentLoc = snapshot.val();
+}
+
+function onStateStatusChange(snapshot){
+    currentStatus = snapshot.val()
+
+    if (currentStatus === 'play'){
         let uris = []
-        queue.slice(state.current_index).forEach(element => {
+        queue.slice(currentIndex).forEach(element => {
             uris.push(element.track_obj.uri);
         });
-        startPlayback(uris, state.current_loc);
+        startPlayback(uris, currentLoc);
     } else {
-        // pause music
+        // pause playback
         pausePlayback();
     }
-
-
 }
+
+// function onStateChange(snapshot){
+//     const newState = snapshot.val();
+
+//     if (state.status === 'play'){
+//         // play music
+//         let uris = []
+//         queue.slice(state.current_index).forEach(element => {
+//             uris.push(element.track_obj.uri);
+//         });
+//         startPlayback(uris, state.current_loc);
+//     } else {
+//         // pause music
+//         pausePlayback();
+//     }
+
+//     if (state.current_index)
+// }
 
 function onUserChange(snapshot){
     users = snapshot.val()
@@ -262,30 +294,47 @@ function addToQueue(trackObj){
     partyQueueRef.child(queueIndex).set(queueItem);
 }
 
-function updateStatePause(){
+async function updateStatus(){
+    const stateRef = database.ref('parties/state/').child(globalPartyCode);
+    const stateStatusRef = stateRef.child('status');
+    const stateLocRef = stateRef.child('current_loc');
+
+    // set state
+    if (currentStatus === 'play'){
+        stateStatusRef.set('pause');
+    } else if (currentStatus === 'pause'){
+        stateStatusRef.set('play');
+    };
+
+    const state = await player.getCurrentState()
+    if (!state){
+        console.error('User is not playing music right now');
+    }
+
+    stateLocRef.set(state.position);
     
 }
 
-function updateState(status, current_loc, current_index){
-    let newState = {};
+// function updateState(status, current_loc, current_index){
+//     let newState = {};
 
-    if (typeof(status) !== undefined){
-        newState.status = status;
-    }
+//     if (typeof(status) !== undefined){
+//         newState.status = status;
+//     }
 
-    if (typeof(current_loc) !== undefined){
-        newState.current_loc = current_loc;
-    }
+//     if (typeof(current_loc) !== undefined){
+//         newState.current_loc = current_loc;
+//     }
 
-    if (typeof(current_index) !== undefined){
-        newState.current_index = current_index;
-    }
+//     if (typeof(current_index) !== undefined){
+//         newState.current_index = current_index;
+//     }
 
 
-    if (status === 'pause'){
-        //save current loc
-    }
+//     if (status === 'pause'){
+//         //save current loc
+//     }
     
-    console.log(newState);
-    database.ref('parties/state/').child(globalPartyCode).update(newState);
-}
+//     console.log(newState);
+//     database.ref('parties/state/').child(globalPartyCode).update(newState);
+// }
