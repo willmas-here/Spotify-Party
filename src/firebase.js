@@ -5,6 +5,7 @@ let currentIndex;
 let currentLoc;
 let currentStatus;
 let database;
+let queueNotUpdated;
 
 window.addEventListener("load", function(){
     var firebaseConfig = {
@@ -251,7 +252,9 @@ function onStateIndexChange(snapshot){
             uris.push(element.track_obj.uri);
         });
         startPlayback(uris, currentLoc);
-    };
+    } else {
+        queueNotUpdated = true;
+    }
 }
 
 function onStateLocChange(snapshot){
@@ -263,20 +266,25 @@ function onStateLocChange(snapshot){
 function onStateStatusChange(snapshot){
     currentStatus = snapshot.val()
 
-    if (currentStatus === 'play'){
-        // let uris = []
-        // queue.slice(currentIndex).forEach(element => {
-        //     uris.push(element.track_obj.uri);
-        // });
-        // startPlayback(uris, currentLoc);
-
-        player.resume();
-        chrome.runtime.sendMessage({'command': 'onPlay', 'recipient': 'browser'})
+    if (queueNotUpdated === false){
+        if (currentStatus === 'play'){
+            player.resume();
+            chrome.runtime.sendMessage({'command': 'onPlay', 'recipient': 'browser'})
+        } else {
+            player.pause();
+            chrome.runtime.sendMessage({'command': 'onPause', 'recipient': 'browser'})
+        }
     } else {
-        // pausePlayback();
-
-        player.pause();
-        chrome.runtime.sendMessage({'command': 'onPause', 'recipient': 'browser'})
+        if (currentStatus === 'play'){
+            let uris = []
+            queue.slice(currentIndex).forEach(element => {
+                uris.push(element.track_obj.uri);
+            });
+            startPlayback(uris, currentLoc);
+            queueNotUpdated = false;
+        } else {
+            queueNotUpdated = true;
+        }
     }
 }
 

@@ -243,6 +243,18 @@ async function onPlayerStateChange(state){
     if (state.repeat_mode !== 0){
         setRepeat('off');
     }
+
+    // if (state.track_window.previous_tracks.array)
+    state.track_window.previous_tracks.forEach(element => {
+        if (element.id === queue[currentIndex].id){
+            const stateRef = database.ref('parties/state/').child(globalPartyCode);
+            const stateIndexRef = stateRef.child('current_index');
+            const stateLocRef = stateRef.child('current_loc');
+
+            stateIndexRef.set(currentIndex + 1)
+            stateLocRef.set(0);
+        }
+    });
 }
 
 async function getUserPlayback(){
