@@ -36,6 +36,16 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
             window.close()
             response({'response': 'success'});
         }
+
+        if (msg.command === 'onPlay'){
+            document.getElementById('play-icon').className = 'far fa-pause-circle';
+            response({'response': 'success'});
+        }
+
+        if (msg.command === 'onPause'){
+            document.getElementById('play-icon').className = 'far fa-play-circle';
+            response({'response': 'success'});
+        }
     }
 });
 
