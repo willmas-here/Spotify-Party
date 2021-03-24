@@ -1,5 +1,9 @@
 let globalPartyCode;
 let globalPartyAttributes;
+let queue;
+let currentIndex;
+let currentLoc;
+let currentStatus;
 let database;
 
 window.addEventListener("load", function(){
@@ -219,6 +223,14 @@ function onAttributesChange(snapshot){
 function onQueueChange(snapshot){
     try{
         queue = snapshot.val();
+
+        if (currentStatus === 'play'){
+            let uris = []
+            queue.slice(currentIndex).forEach(element => {
+                uris.push(element.track_obj.uri);
+            });
+            startPlayback(uris, currentLoc);
+        };
         
         chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue}, function(response){
             console.log(response);
@@ -231,11 +243,21 @@ function onQueueChange(snapshot){
 
 function onStateIndexChange(snapshot){
     currentIndex = snapshot.val();
+
     // change player
+    if (currentStatus === 'play'){
+        let uris = []
+        queue.slice(currentIndex).forEach(element => {
+            uris.push(element.track_obj.uri);
+        });
+        startPlayback(uris, currentLoc);
+    };
 }
 
 function onStateLocChange(snapshot){
     currentLoc = snapshot.val();
+
+    seekPlayback(currentLoc)
 }
 
 function onStateStatusChange(snapshot){
@@ -252,24 +274,6 @@ function onStateStatusChange(snapshot){
         pausePlayback();
     }
 }
-
-// function onStateChange(snapshot){
-//     const newState = snapshot.val();
-
-//     if (state.status === 'play'){
-//         // play music
-//         let uris = []
-//         queue.slice(state.current_index).forEach(element => {
-//             uris.push(element.track_obj.uri);
-//         });
-//         startPlayback(uris, state.current_loc);
-//     } else {
-//         // pause music
-//         pausePlayback();
-//     }
-
-//     if (state.current_index)
-// }
 
 function onUserChange(snapshot){
     users = snapshot.val()
@@ -290,14 +294,16 @@ function addToQueue(trackObj){
         'user': firebase.auth().currentUser.uid
     };
 
+    updatePosition();
+
     const partyQueueRef = database.ref('parties/queues/' + globalPartyCode);
     partyQueueRef.child(queueIndex).set(queueItem);
+    
 }
 
 async function updateStatus(){
     const stateRef = database.ref('parties/state/').child(globalPartyCode);
     const stateStatusRef = stateRef.child('status');
-    const stateLocRef = stateRef.child('current_loc');
 
     // set state
     if (currentStatus === 'play'){
@@ -306,35 +312,20 @@ async function updateStatus(){
         stateStatusRef.set('play');
     };
 
-    const state = await player.getCurrentState()
+    // set position
+    updatePosition();
+    
+}
+
+async function updatePosition(){
+    const stateRef = database.ref('parties/state/').child(globalPartyCode);
+    const stateLocRef = stateRef.child('current_loc');
+
+    const state = await player.getCurrentState();
     if (!state){
         console.error('User is not playing music right now');
     }
 
     stateLocRef.set(state.position);
-    
+
 }
-
-// function updateState(status, current_loc, current_index){
-//     let newState = {};
-
-//     if (typeof(status) !== undefined){
-//         newState.status = status;
-//     }
-
-//     if (typeof(current_loc) !== undefined){
-//         newState.current_loc = current_loc;
-//     }
-
-//     if (typeof(current_index) !== undefined){
-//         newState.current_index = current_index;
-//     }
-
-
-//     if (status === 'pause'){
-//         //save current loc
-//     }
-    
-//     console.log(newState);
-//     database.ref('parties/state/').child(globalPartyCode).update(newState);
-// }

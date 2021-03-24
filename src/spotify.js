@@ -243,18 +243,6 @@ async function onPlayerStateChange(state){
     if (state.repeat_mode !== 0){
         setRepeat('off');
     }
-
-    // test if song has ended
-    // if (
-    //     this.state
-    //     && state.track_window.previous_tracks.find(x => x.id === state.track_window.current_track.id)
-    //     && !this.state.paused
-    //     && state.paused
-    //     ) {
-    //     console.log('Track ended');
-    //     this.setTrackEnd(true);
-    //   }
-    // this.state = state;
 }
 
 async function getUserPlayback(){
