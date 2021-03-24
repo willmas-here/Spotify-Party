@@ -5,7 +5,7 @@
     "icons": {
         "128": "icon_128.png"
     },
-    "content_security_policy":"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com https://sdk.scdn.co/ 'unsafe-inline'; object-src 'self'",
+    "content_security_policy":"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com https://sdk.scdn.co/ https://apis.google.com 'unsafe-inline'; object-src 'self'",
     "background": {
         "page": "background.html",
         "persistent": false

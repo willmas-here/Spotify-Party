@@ -22,7 +22,26 @@ window.addEventListener("load", function(){
     firebase.initializeApp(firebaseConfig);
     console.log(firebase);
 
-    firebase.auth().signInAnonymously();
+    // firebase.auth().signInAnonymously();
+
+    var googleAuthProvider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().useDeviceLanguage();
+
+    firebase.auth()
+        .signInWithPopup(googleAuthProvider)
+        .then((result) => {
+            var credential = result.credential;
+            var token = credential.accessToken;
+            var user = result.user;
+
+        }).catch((error) => {
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            var email = error.email;
+            var credential = error.credential;
+            
+            console.error(error);
+        })
 
     firebase.auth().onAuthStateChanged(firebaseUser => {
         console.log(firebaseUser);
