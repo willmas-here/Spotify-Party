@@ -7,15 +7,7 @@ window.addEventListener('load', function(){
         window.open(chrome.runtime.getURL('browser.html'));
     })
     document.getElementById('join-form').addEventListener("submit", submitForm);
-
-    // options menu event listeners
-    document.getElementById("options-btn").addEventListener("click", function(){
-        if (chrome.runtime.openOptionsPage) {
-            chrome.runtime.openOptionsPage();
-        } else {
-            window.open(chrome.runtime.getURL('options.html'));
-        }
-    });
+    
     document.getElementById('leave-btn').addEventListener('click', function() {
         chrome.runtime.sendMessage({command: 'leaveParty', recipient: 'firebase'});
     });

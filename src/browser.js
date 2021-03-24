@@ -6,13 +6,6 @@ window.addEventListener('load', function(){
     document.getElementById("search-form").addEventListener("submit", searchSongs);
 
     document.getElementById("settings-btn").addEventListener("click", openSettings, true);
-    document.getElementById("options-btn").addEventListener("click", function(){
-        if (chrome.runtime.openOptionsPage) {
-            chrome.runtime.openOptionsPage();
-        } else {
-            window.open(chrome.runtime.getURL('options.html'));
-        }
-    });
     document.getElementById('leave-btn').addEventListener('click', function(){
         chrome.runtime.sendMessage({'command': 'leaveParty', 'recipient': 'firebase'});
     })
