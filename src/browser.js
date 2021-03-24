@@ -1,7 +1,7 @@
 window.addEventListener('load', function(){
-    document.getElementById("back-btn").addEventListener("click", function(){});
-    document.getElementById("forward-btn").addEventListener("click", function(){});
-    document.getElementById("play-btn").addEventListener("click", togglePlay);
+    document.getElementById("back-btn").addEventListener("click", () => chrome.runtime.sendMessage({'command': 'skipPrevious', 'recipient': 'firebase'}));
+    document.getElementById("forward-btn").addEventListener("click", () => chrome.runtime.sendMessage({'command': 'skipNext', 'recipient': 'firebase'}));
+    document.getElementById("play-btn").addEventListener("click", () => chrome.runtime.sendMessage({'command': 'togglePlay', 'recipient': 'firebase'}));
 
     document.getElementById("search-form").addEventListener("submit", searchSongs);
 
@@ -48,10 +48,6 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         }
     }
 });
-
-function togglePlay(){
-    chrome.runtime.sendMessage({'command': 'togglePlay', 'recipient': 'firebase'});
-}
 
 function searchSongs(e){
     e.preventDefault();

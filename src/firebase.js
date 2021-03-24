@@ -79,6 +79,24 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         if(msg.command === 'togglePlay'){
             updateStatus();
         }
+
+        if (msg.command === 'skipNext'){
+            const stateRef = database.ref('parties/state/').child(globalPartyCode);
+            const stateIndexRef = stateRef.child('current_index');
+            const stateLocRef = stateRef.child('current_loc');
+
+            stateIndexRef.set(currentIndex + 1);
+            stateLocRef.set(0);
+        }
+
+        if (msg.command === 'skipPrevious'){
+            const stateRef = database.ref('parties/state/').child(globalPartyCode);
+            const stateIndexRef = stateRef.child('current_index');
+            const stateLocRef = stateRef.child('current_loc');
+
+            stateIndexRef.set(currentIndex - 1);
+            stateLocRef.set(0);
+        }
     }
 });
 
