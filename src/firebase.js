@@ -24,28 +24,7 @@ window.addEventListener("load", function(){
 
     // firebase.auth().signInAnonymously();
 
-    var googleAuthProvider = new firebase.auth.GoogleAuthProvider();
-    firebase.auth().useDeviceLanguage();
-
-    firebase.auth()
-        .signInWithPopup(googleAuthProvider)
-        .then((result) => {
-            var credential = result.credential;
-            var token = credential.accessToken;
-            var user = result.user;
-
-        }).catch((error) => {
-            var errorCode = error.code;
-            var errorMessage = error.message;
-            var email = error.email;
-            var credential = error.credential;
-            
-            console.error(error);
-        })
-
-    firebase.auth().onAuthStateChanged(firebaseUser => {
-        console.log(firebaseUser);
-    });
+    firebase.auth().onAuthStateChanged(firebaseUser => onAuthStateChanged(firebaseUser));
 
     database = firebase.database();
 
@@ -84,7 +63,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         };
 
         if(msg.command === 'openBrowser'){
-            chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser', 'queueObj': queue}, function(searchResponse){
+            chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser', 'queueObj': queue, 'currentIndex': currentIndex}, function(searchResponse){
                 console.log(searchResponse);
                 response({'response': 'success'});
             });
@@ -118,6 +97,35 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         }
     }
 });
+
+function signIn(){
+    var googleAuthProvider = new firebase.auth.GoogleAuthProvider();
+    firebase.auth().useDeviceLanguage();
+    firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL);
+
+    firebase.auth()
+        .signInWithPopup(googleAuthProvider)
+        .then((result) => {
+            var credential = result.credential;
+            var token = credential.accessToken;
+            var user = result.user;
+
+        }).catch((error) => {
+            var errorCode = error.code;
+            var errorMessage = error.message;
+            var email = error.email;
+            var credential = error.credential;
+
+            console.error(error);
+        })    
+}
+
+function onAuthStateChanged(user){
+    if (user) {
+        const userRef = database.ref('users/').child(user.uid)
+        userRef.set({'displayName': user.displayName});
+    }
+}
 
 async function createParty(){
     // refs
@@ -165,7 +173,9 @@ async function createParty(){
     };
 
     const users = {
-        [uid]: true
+        [uid]: {
+            'displayName': firebase.auth().currentUser.displayName
+        }
     };
 
     try {
@@ -193,7 +203,7 @@ async function joinParty(inputPartyCode){
     // set user = true
     const uid = firebase.auth().currentUser.uid;
 
-    database.ref('parties/users/').child(inputPartyCode).child(uid).set(true)
+    database.ref('parties/users/').child(inputPartyCode).child(uid).set({'displayName': firebase.auth().currentUser.displayName})
     .then(() => console.log('set user'))
 
     // set db listeners
@@ -270,7 +280,7 @@ function onQueueChange(snapshot){
             startPlayback(uris, currentLoc);
         };
         
-        chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue}, function(response){
+        chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue, 'currentIndex': currentIndex}, function(response){
             console.log(response);
         });
     } catch(err) {
@@ -292,6 +302,10 @@ function onStateIndexChange(snapshot){
     } else {
         queueNotUpdated = true;
     }
+
+    chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue, 'currentIndex': currentIndex}, function(response){
+        console.log(response);
+    });
 }
 
 function onStateLocChange(snapshot){
@@ -341,7 +355,10 @@ function addToQueue(trackObj){
     // update new index
     const queueItem = {
         'track_obj': trackObj,
-        'user': firebase.auth().currentUser.uid
+        'user': {
+            'uid': firebase.auth().currentUser.uid,
+            'displayName': firebase.auth().currentUser.displayName
+        }
     };
 
     updatePosition();

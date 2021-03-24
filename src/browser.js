@@ -28,7 +28,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         console.log(msg);
 
         if (msg.command === 'updateQueue'){
-            updateQueue(msg.queueObj);
+            updateQueue(msg.queueObj, msg.currentIndex);
             response({'response': 'success'});
         }
 
@@ -115,7 +115,7 @@ function addToQueue(trackObj){
     chrome.runtime.sendMessage({'command': 'addToQueue', 'recipient': 'firebase', 'trackObj': trackObj});
 }
 
-function updateQueue(queueObj){
+function updateQueue(queueObj, currentIndex){
     // delete existing queue
     const queueItems = document.getElementsByClassName('queue-item-container');
 
@@ -125,37 +125,39 @@ function updateQueue(queueObj){
 
     // populate queue
     queueObj.forEach((element, i) => {
-        let queueItemContainer = document.createElement('div');
-        queueItemContainer.className = "queue-item-container";
-        queueItemContainer.id = "queue-container-" + element.track_obj.id + '-' + i;
+        if (i >= currentIndex){
+            let queueItemContainer = document.createElement('div');
+            queueItemContainer.className = "queue-item-container";
+            queueItemContainer.id = "queue-container-" + element.track_obj.id + '-' + i;
 
-        let queueItemIndex = document.createElement('p');
-        queueItemIndex.className = "queue-item index";
-        queueItemIndex.innerText = i+1;
+            let queueItemIndex = document.createElement('p');
+            queueItemIndex.className = "queue-item index";
+            queueItemIndex.innerText = i+1;
 
-        let queueItemTitle = document.createElement('p');
-        queueItemTitle.className = "queue-item title";
-        queueItemTitle.innerText = element.track_obj.name;
+            let queueItemTitle = document.createElement('p');
+            queueItemTitle.className = "queue-item title";
+            queueItemTitle.innerText = element.track_obj.name;
 
-        
-        let artistStr = element.track_obj.artists[0].name;
-        for (let index = 1; index < element.track_obj.artists.length; index++) {
-            artistStr += ", " + element.track_obj.artists[index].name;
+            
+            let artistStr = element.track_obj.artists[0].name;
+            for (let index = 1; index < element.track_obj.artists.length; index++) {
+                artistStr += ", " + element.track_obj.artists[index].name;
+            }
+            let queueItemArtist = document.createElement('p');
+            queueItemArtist.className = "queue-item artist";
+            queueItemArtist.innerText = artistStr;
+
+            let queueItemUser = document.createElement('p');
+            queueItemUser.className = "queue-item user";
+            queueItemUser.innerText = element.user.displayName;
+
+            queueItemContainer.appendChild(queueItemIndex);
+            queueItemContainer.appendChild(queueItemTitle);
+            queueItemContainer.appendChild(queueItemArtist);
+            queueItemContainer.appendChild(queueItemUser);
+
+            document.getElementById('queue-container').appendChild(queueItemContainer);
         }
-        let queueItemArtist = document.createElement('p');
-        queueItemArtist.className = "queue-item artist";
-        queueItemArtist.innerText = artistStr;
-
-        let queueItemUser = document.createElement('p');
-        queueItemUser.className = "queue-item user";
-        queueItemUser.innerText = element.user;
-
-        queueItemContainer.appendChild(queueItemIndex);
-        queueItemContainer.appendChild(queueItemTitle);
-        queueItemContainer.appendChild(queueItemArtist);
-        queueItemContainer.appendChild(queueItemUser);
-
-        document.getElementById('queue-container').appendChild(queueItemContainer);
     });
 }
 
