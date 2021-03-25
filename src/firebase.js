@@ -33,6 +33,7 @@ window.addEventListener("load", function(){
         if(result.inParty === true){
             globalPartyCode = result.partyCode;
             addFirebaseListeners();
+            player.connect();
         }
     });    
 });
@@ -179,12 +180,12 @@ async function createParty(){
     };
 
     try {
-        await attributesRef.child(globalPartyCode).set(attributes)
+        await attributesRef.child(globalPartyCode).set(attributes);
         await queuesRef.child(globalPartyCode).set(true);
-        await stateRef.child(globalPartyCode).set(state)
-        await usersRef.child(globalPartyCode).set(users)
+        await stateRef.child(globalPartyCode).set(state);
+        await usersRef.child(globalPartyCode).set(users);
     } catch(err) {
-        console.error(err)
+        console.error(err);
     }
     addFirebaseListeners();
     
@@ -192,6 +193,9 @@ async function createParty(){
     chrome.storage.sync.set({inParty: true, partyCode:globalPartyCode},function(){
         console.log('Party Code ' + globalPartyCode + ' saved to storage', response => console.log(response));
     });
+
+    player.connect();
+    transferPlayback();
     
     return globalPartyCode
 }
@@ -214,6 +218,9 @@ async function joinParty(inputPartyCode){
         console.log('Party Code ' + globalPartyCode + ' saved to storage');
     });
 
+    player.connect();
+    transferPlayback();
+
     chrome.runtime.sendMessage({'command': 'partyJoined','recipient': 'popup'});
 }
 
@@ -221,7 +228,7 @@ function leaveParty(){
     // set user = false
     const uid = firebase.auth().currentUser.uid;
 
-    database.ref('users/').child(globalPartyCode).child(uid).remove()
+    database.ref('parties/users/').child(globalPartyCode).child(uid).remove()
     .then(() => console.log('removed user'))
 
     // remove db listeners

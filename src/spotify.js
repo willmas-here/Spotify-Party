@@ -34,9 +34,6 @@ window.onSpotifyWebPlaybackSDKReady = function(){
     player.addListener('not_ready', ({ device_id }) => {
         console.log('Device ID has gone offline', device_id);
     });
-
-    // connect to player
-    player.connect();
 };
 
 window.addEventListener("load", function(){
@@ -266,7 +263,7 @@ async function getUserPlayback(){
             'Authorization': 'Bearer ' + access_token,
         }
     });
-
+    console.log(response.status)
     const json = await response.json();
     return json;
 }
@@ -351,6 +348,38 @@ async function setRepeat(state='off'){
             'Authorization': 'Bearer ' + access_token
         }
     });
+}
+
+async function transferPlayback(){
+    await testTokenValidity();
+    let device_ids = [global_device_id]
+    const body = JSON.stringify({
+        'device_ids': device_ids,
+        'play': false
+    })
+
+    const response = await fetch('https://api.spotify.com/v1/me/player', {
+        method: 'PUT',
+        headers: {
+            'Authorization': 'Bearer ' + access_token
+        },
+        body: body
+
+    })
+
+    json = await response.status
+    console.log(json)
+}
+
+async function getDevices(){
+    await testTokenValidity();
+    const response = await fetch('https://api.spotify.com/v1/me/player/devices', {
+        method: 'GET',
+        headers: {
+            'Authorization': 'Bearer ' + access_token
+        }        
+    })
+    console.log(await response.json())
 }
 
 async function search(query){
