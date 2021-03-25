@@ -1,7 +1,6 @@
 {
     "manifest_version": 2,
     "name": "Music Party",
-    "description": "Listen to music in sync with friends! \n\n Music Party syncs up your music with your friends and allows everybody to control the music remotely. Simply add a song to the queue to get started. \n\n A Spotify Premium subscription is required to use Music Party.",
     "version": "0.1.0",
     "icons": {
         "128": "static/images/icon_128.png"
