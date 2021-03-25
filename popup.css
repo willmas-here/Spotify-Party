@@ -132,7 +132,7 @@ body{
 .main{
     display: grid;
     grid-template-columns: 210px 100px 170px;
-    grid-template-rows: 44px 45px 40px auto;
+    grid-template-rows: 44px 30px 55px auto;
     background-image: linear-gradient(#2e2828, #4D4D4D);
 }
 
@@ -155,6 +155,33 @@ body{
     grid-row: 2;
     font-size: 15px;
 }
+
+.main-item.controller{
+    grid-column: 1 / 3;
+    grid-row: 3;
+    display: flex;
+    justify-content: center;
+}
+
+.main-item.controller .controller.btn{
+    background-color: rgba(0,0,0,0);
+    border: 0;
+    outline: none;
+    color:#ebe9e9;    
+}
+
+.main-item.controller .controller.btn:hover, .main-item.controller .controller.btn:disabled{
+    color:#969191;
+}
+
+.main-item.controller .controller.btn i{
+    font-size: 25px;
+}
+
+.main-item.controller .controller.btn.play i{
+    font-size: 35px;
+}
+
 
 .main-item.code, .main-item.far{
     font-size: 15px;

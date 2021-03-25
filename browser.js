@@ -164,20 +164,16 @@ function updateQueue(queueObj, currentIndex){
     if (currentIndex <= 0){
         // disable skip previous
         backBtn.disabled = true;
-        backBtn.style.color = '#969191';
     } else {
         // enable skip previous
         backBtn.disabled = false;
-        backBtn.style.color = '#ebe9e9';
     }
     if (currentIndex >= queueObj.length - 1){
         // disable skip next
         forwardBtn.disabled = true;
-        forwardBtn.style.color = '#969191';
     } else {
         // enable skip next
         forwardBtn.disabled = false;
-        forwardBtn.style.color = '#ebe9e9';
     }
 }
 

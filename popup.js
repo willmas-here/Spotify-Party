@@ -17,6 +17,9 @@ window.addEventListener('load', function(){
     document.getElementById('logout-btn').addEventListener('click', () => {
         chrome.runtime.sendMessage({'command': 'signOut', 'recipient': 'firebase'});
     })
+    document.getElementById('play-btn').addEventListener('click', () => chrome.runtime.sendMessage({'command': 'togglePlay', 'recipient': 'firebase'}))
+    document.getElementById('back-btn').addEventListener('click', () => chrome.runtime.sendMessage({'command': 'skipPrevious', 'recipient': 'firebase'}))
+    document.getElementById('forward-btn').addEventListener('click', () => chrome.runtime.sendMessage({'command': 'skipNext', 'recipient': 'firebase'}))
 
     // hiding things
     document.getElementById("settings-menu").style.display = "none";
@@ -55,6 +58,21 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         if (msg.command === 'signedOut'){
             changePage('signin');
         }
+
+        if (msg.command === 'onPlay'){
+            document.getElementById('play-icon').className = 'far fa-pause-circle';
+            response({'response': 'success'});
+        }
+
+        if (msg.command === 'onPause'){
+            document.getElementById('play-icon').className = 'far fa-play-circle';
+            response({'response': 'success'});
+        }
+
+        if (msg.command === 'updateQueue'){
+            updateQueue(msg.queueObj, msg.currentIndex);
+            response({'response': 'success'});
+        }
     }
 })
 
@@ -86,6 +104,7 @@ function initMain() {
     chrome.storage.sync.get(['partyCode'], function(result) {
         document.getElementById("party-code").innerText = 'Party Code: ' + result.partyCode;
     });
+    chrome.runtime.sendMessage({'command': 'openPopup', 'recipient': 'firebase'})
 }
 
 function joinParty(){
@@ -136,4 +155,41 @@ function submitForm(e){
     })
     
     //join
+}
+
+function updateQueue(queueObj, currentIndex){
+    if(queueObj === true){
+        // no song in queue
+        queueObj = new Array(0);
+    }
+
+    console.log(queueObj);
+
+    document.getElementById('title').innerText = queueObj[currentIndex].track_obj.name;
+
+    let artistStr = queueObj[currentIndex].track_obj.artists[0].name;
+    for (let index = 1; index < queueObj[currentIndex].track_obj.artists.length; index++) {
+        artistStr += ", " + queueObj[currentIndex].track_obj.artists[index].name;
+    }
+    document.getElementById('artist').innerText = artistStr;
+
+    document.getElementById('art').setAttribute('src', queueObj[currentIndex].track_obj.album.images[1].url)
+
+    // skip btn edge cases
+    const forwardBtn = document.getElementById('forward-btn')
+    const backBtn = document.getElementById('back-btn')
+    if (currentIndex <= 0){
+        // disable skip previous
+        backBtn.disabled = true;
+    } else {
+        // enable skip previous
+        backBtn.disabled = false;
+    }
+    if (currentIndex >= queueObj.length - 1){
+        // disable skip next
+        forwardBtn.disabled = true;
+    } else {
+        // enable skip next
+        forwardBtn.disabled = false;
+    }
 }

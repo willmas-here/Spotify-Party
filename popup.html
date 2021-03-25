@@ -36,13 +36,18 @@
             </div>
 
             <div class="body main" id="main">
-                <h2 class="main-item song">Daughters strong or smth</h2>
-                <h3 class="main-item artist">Webb schoosl lmao</h3>
+                <h2 class="main-item song" id="title"></h2>
+                <h3 class="main-item artist" id="artist"></h3>
+                <div class="main-item controller">                    
+                    <button id="back-btn" class="controller btn"><i class="fas fa-step-backward"></i></button>
+                    <button id="play-btn" class="controller btn play"><i id="play-icon" class="far fa-play-circle"></i></button>
+                    <button id="forward-btn" class="controller btn"><i class="fas fa-step-forward"></i></button>
+                </div>
                 <div class="main-item code">
-                    <p class="code" id="party-code">Party Code: 123456 <i class="far fa-question-circle"></i></p>
+                    <p class="code" id="party-code"><i class="far fa-question-circle"></i></p>
                 </div>
                 <button class="main-item queue" id="queue-btn">Queue</button>
-                <img class="art" src="" alt="">
+                <img class="art" src="" alt="Album Art Cover" id="art">
             </div>
         </div>
     </div>

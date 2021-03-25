@@ -64,10 +64,27 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         };
 
         if(msg.command === 'openBrowser'){
-            chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser', 'queueObj': queue, 'currentIndex': currentIndex}, function(searchResponse){
-                console.log(searchResponse);
+            chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser', 'queueObj': queue, 'currentIndex': currentIndex}, function(resp){
+                console.log(resp);
                 response({'response': 'success'});
             });
+            if (currentStatus === 'play'){
+                chrome.runtime.sendMessage({'command': 'onPlay', 'recipient': 'browser'});
+            } else {
+                chrome.runtime.sendMessage({'command': 'onPause', 'recipient': 'browser'});
+            };
+        }
+
+        if(msg.command === 'openPopup'){
+            chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'popup', 'queueObj': queue, 'currentIndex': currentIndex}, function(resp){
+                console.log(resp);
+                response({'response': 'success'});
+            });
+            if (currentStatus === 'play'){
+                chrome.runtime.sendMessage({'command': 'onPlay', 'recipient': 'popup'});
+            } else {
+                chrome.runtime.sendMessage({'command': 'onPause', 'recipient': 'popup'});
+            };
         }
 
         if(msg.command === 'leaveParty'){
@@ -310,9 +327,8 @@ function onQueueChange(snapshot){
             startPlayback(uris, currentLoc);
         };
         
-        chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue, 'currentIndex': currentIndex}, function(response){
-            console.log(response);
-        });
+        chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue, 'currentIndex': currentIndex});
+        chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'popup','queueObj': queue, 'currentIndex': currentIndex});
     } catch(err) {
         queue = undefined;
         console.error(err)
@@ -333,9 +349,8 @@ function onStateIndexChange(snapshot){
         queueNotUpdated = true;
     }
 
-    chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue, 'currentIndex': currentIndex}, function(response){
-        console.log(response);
-    });
+    chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'browser','queueObj': queue, 'currentIndex': currentIndex});
+    chrome.runtime.sendMessage({'command': 'updateQueue', 'recipient': 'popup','queueObj': queue, 'currentIndex': currentIndex});
 }
 
 function onStateLocChange(snapshot){
@@ -350,10 +365,12 @@ function onStateStatusChange(snapshot){
     if (queueNotUpdated === false){
         if (currentStatus === 'play'){
             player.resume();
-            chrome.runtime.sendMessage({'command': 'onPlay', 'recipient': 'browser'})
+            chrome.runtime.sendMessage({'command': 'onPlay', 'recipient': 'browser'});
+            chrome.runtime.sendMessage({'command': 'onPlay', 'recipient': 'popup'});
         } else {
             player.pause();
-            chrome.runtime.sendMessage({'command': 'onPause', 'recipient': 'browser'})
+            chrome.runtime.sendMessage({'command': 'onPause', 'recipient': 'browser'});
+            chrome.runtime.sendMessage({'command': 'onPause', 'recipient': 'popup'});
         }
     } else {
         if (currentStatus === 'play'){

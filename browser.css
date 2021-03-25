@@ -226,7 +226,7 @@ body{
     color:#ebe9e9;    
 }
 
-.controller.btn:hover{
+.controller.btn:hover, .controller.btn:disabled{
     color:#969191;
     
 }
