@@ -116,6 +116,11 @@ function updateQueue(queueObj, currentIndex){
         queueItems.item(0).remove();
     }
 
+    if(queueObj === true){
+        queueObj = new Array(0);
+    }
+
+    console.log(queueObj)
     // populate queue
     queueObj.forEach((element, i) => {
         if (i >= currentIndex){
@@ -152,6 +157,28 @@ function updateQueue(queueObj, currentIndex){
             document.getElementById('queue-container').appendChild(queueItemContainer);
         }
     });
+
+    // skip edge cases
+    const forwardBtn = document.getElementById('forward-btn')
+    const backBtn = document.getElementById('back-btn')
+    if (currentIndex <= 0){
+        // disable skip previous
+        backBtn.disabled = true;
+        backBtn.style.color = '#969191';
+    } else {
+        // enable skip previous
+        backBtn.disabled = false;
+        backBtn.style.color = '#ebe9e9';
+    }
+    if (currentIndex >= queueObj.length - 1){
+        // disable skip next
+        forwardBtn.disabled = true;
+        forwardBtn.style.color = '#969191';
+    } else {
+        // enable skip next
+        forwardBtn.disabled = false;
+        forwardBtn.style.color = '#ebe9e9';
+    }
 }
 
 function openSettings(){

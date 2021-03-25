@@ -159,7 +159,7 @@ async function createParty(){
 
     // make a code (test to make sure unique)
 
-    const snapshot = await attributesRef.get();
+    const snapshot = await usersRef.get();
     if (!snapshot.exists())
         console.log("No data available");
 
@@ -202,10 +202,11 @@ async function createParty(){
     };
 
     try {
+        await usersRef.child(globalPartyCode).set(users);
         await attributesRef.child(globalPartyCode).set(attributes);
         await queuesRef.child(globalPartyCode).set(true);
         await stateRef.child(globalPartyCode).set(state);
-        await usersRef.child(globalPartyCode).set(users);
+        
     } catch(err) {
         console.error(err);
     }
