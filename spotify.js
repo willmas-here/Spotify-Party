@@ -1,4 +1,4 @@
-let access_token, refresh_token, last_token_refresh_time, global_device_id, player;
+let access_token, refresh_token, last_token_refresh_time, global_device_id, player, loggingIn;
 
 // initialize player
 window.onSpotifyWebPlaybackSDKReady = function(){
@@ -63,6 +63,11 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
 });
 
 async function spotifyLogin(){
+    if (loggingIn){
+        console.log('Already Logging In')
+        return
+    }
+    loggingIn = true;
     // code verifier
     function dec2hex(dec) {
         return ('0' + dec.toString(16)).substr(-2)
@@ -178,6 +183,7 @@ async function spotifyLogin(){
         }, function(){
             console.log('tokens saved to storage');
         });
+        loggingIn = false;
 
         return true
     });
