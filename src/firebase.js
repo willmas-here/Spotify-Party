@@ -96,6 +96,22 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
             stateIndexRef.set(currentIndex - 1);
             stateLocRef.set(0);
         }
+
+        if (msg.command === 'signIn'){
+            signIn();
+
+        }
+
+        if (msg.command === 'signOut'){
+            chrome.storage.sync.get(['inParty'], (objects) => {
+                if (objects.inParty === true){
+                    leaveParty();
+                };
+            });
+            firebase.auth().signOut().then(() => {
+                chrome.runtime.sendMessage({'command': 'signedOut', 'recipient': 'popup'})
+            });
+        }
     }
 });
 
@@ -125,6 +141,12 @@ function onAuthStateChanged(user){
     if (user) {
         const userRef = database.ref('users/').child(user.uid)
         userRef.set({'displayName': user.displayName});
+
+        chrome.storage.sync.set({signedIn: true, uid: user.uid, displayName: user.displayName});
+
+        chrome.runtime.sendMessage({'command': 'signedIn', 'recipient': 'popup'});
+    } else {
+        chrome.storage.sync.set({signedIn: false, uid: null, displayName: null});
     }
 }
 
@@ -398,8 +420,7 @@ async function updatePosition(){
     const state = await player.getCurrentState();
     if (!state){
         console.error('User is not playing music right now');
+    } else {
+        stateLocRef.set(state.position);
     }
-
-    stateLocRef.set(state.position);
-
 }

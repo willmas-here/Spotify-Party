@@ -1,5 +1,8 @@
 window.addEventListener('load', function(){
     // main buttons event listeners
+    document.getElementById('signin-btn').addEventListener('click', () => {
+        chrome.runtime.sendMessage({'command': 'signIn', 'recipient': 'firebase'});
+    })
     document.getElementById("create-btn").addEventListener("click", createParty);
     document.getElementById("join-btn").addEventListener("click", joinParty);
     document.getElementById("settings-btn").addEventListener("click", openSettings, true);
@@ -11,22 +14,30 @@ window.addEventListener('load', function(){
     document.getElementById('leave-btn').addEventListener('click', function() {
         chrome.runtime.sendMessage({command: 'leaveParty', recipient: 'firebase'});
     });
+    document.getElementById('logout-btn').addEventListener('click', () => {
+        chrome.runtime.sendMessage({'command': 'signOut', 'recipient': 'firebase'});
+    })
 
     // hiding things
     document.getElementById("settings-menu").style.display = "none";
     
-    // if in party
-    chrome.storage.sync.get(['inParty'], function(result) {
+    // if in party or signed out
+    chrome.storage.sync.get(['inParty', 'signedIn'], function(result) {
+        console.log(result)
         if(result.inParty === true){
             changePage('main');
+        } else if(result.signedIn !== true){
+            changePage('signin');
         } else {
             changePage('menu');
         }
-    });    
+    });
 });
 
 chrome.runtime.onMessage.addListener(function(msg, sender, response){
     if (msg.recipient === 'popup'){
+        console.log(msg)
+
         if (msg.command === 'leaveParty'){
             leaveParty();
             response({'response': 'success'});
@@ -36,6 +47,14 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
             changePage('main');
             response({'response': 'success'});
         }
+
+        if (msg.command === 'signedIn'){
+            changePage('menu');
+        }
+
+        if (msg.command === 'signedOut'){
+            changePage('signin');
+        }
     }
 })
 
@@ -43,10 +62,12 @@ function changePage(newPage) {
     const menu = document.getElementById("menu");
     const join = document.getElementById("join");
     const main = document.getElementById("main");
+    const signin = document.getElementById('signin');
 
     menu.style.display = "none";
     join.style.display = "none";
     main.style.display = "none";
+    signin.style.display = 'none';
 
     if (newPage == 'menu') {
         menu.style.display = "flex";
@@ -55,7 +76,10 @@ function changePage(newPage) {
     } else if (newPage == 'main') {
         initMain();
         main.style.display = "grid";
+    } else if (newPage === 'signin') {
+        signin.style.display = 'flex';
     }
+    console.log('Changed Page to ' + newPage)
 };
 
 function initMain() {

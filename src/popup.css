@@ -41,6 +41,20 @@ body{
     width: 480px;
 }
 
+.signin-container{
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.signin{
+    height: 40px;
+    width: 185px;
+    border: none;
+    border-radius: 60px;
+    margin: 50px auto;
+}
+
 .menu{
     display: flex;
     justify-content: center;
