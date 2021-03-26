@@ -1,10 +1,11 @@
-let globalPartyCode;
+let partyCode;
 let globalPartyAttributes;
 let queue;
 let currentIndex;
 let currentLoc;
 let currentStatus;
 let database;
+let functions;
 let queueNotUpdated;
 
 window.addEventListener("load", function(){
@@ -27,11 +28,12 @@ window.addEventListener("load", function(){
     firebase.auth().onAuthStateChanged(firebaseUser => onAuthStateChanged(firebaseUser));
 
     database = firebase.database();
+    functions = firebase.functions();
 
     // if in party
     chrome.storage.sync.get(['inParty']['partyCode'], function(result) {
         if(result.inParty === true){
-            globalPartyCode = result.partyCode;
+            partyCode = result.partyCode;
             addFirebaseListeners();
             player.connect();
         }
@@ -97,7 +99,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         }
 
         if (msg.command === 'skipNext'){
-            const stateRef = database.ref('parties/state/').child(globalPartyCode);
+            const stateRef = database.ref('parties/state/').child(partyCode);
             const stateIndexRef = stateRef.child('current_index');
             const stateLocRef = stateRef.child('current_loc');
 
@@ -106,7 +108,7 @@ chrome.runtime.onMessage.addListener(function(msg, sender, response){
         }
 
         if (msg.command === 'skipPrevious'){
-            const stateRef = database.ref('parties/state/').child(globalPartyCode);
+            const stateRef = database.ref('parties/state/').child(partyCode);
             const stateIndexRef = stateRef.child('current_index');
             const stateLocRef = stateRef.child('current_loc');
 
@@ -168,94 +170,42 @@ function onAuthStateChanged(user){
 }
 
 async function createParty(){
-    // refs
-    const attributesRef = database.ref('parties/attributes/');
-    const queuesRef = database.ref('parties/queues/');
-    const stateRef = database.ref('parties/state/');
-    const usersRef = database.ref('parties/users/');
-
-    // make a code (test to make sure unique)
-
-    const snapshot = await usersRef.get();
-    if (!snapshot.exists())
-        console.log("No data available");
-
-    let validCode = false;
-    let tempPartyCode = 0;
-
-    while (!validCode){
-        tempPartyCode = Math.floor(Math.random() * (1000000-100000) + 100000);
-
-        if(!snapshot.child(tempPartyCode).exists()){
-            validCode = true;
-            console.log("Party Code =", tempPartyCode)
-        } else
-            console.log(tempPartyCode, "already exists");
-    }
-
-    globalPartyCode = tempPartyCode
-
-    // create party in db
-    const uid = firebase.auth().currentUser.uid;
-    const attributes = {
-        "host": uid,
-        "permissions": {
-            "change_queue": "everybody",
-            "change_state": "everybody"
-        },
-        "time_created": Date.now()
-    };
-
-    const state = {
-        "status": "pause",
-        "current_index": "0",
-        "current_loc": "0"
-    };
-
-    const users = {
-        [uid]: {
-            'displayName': firebase.auth().currentUser.displayName
-        }
-    };
-
-    try {
-        await usersRef.child(globalPartyCode).set(users);
-        await attributesRef.child(globalPartyCode).set(attributes);
-        await queuesRef.child(globalPartyCode).set(true);
-        await stateRef.child(globalPartyCode).set(state);
-        
-    } catch(err) {
+    try{
+        const result = await firebase.functions().httpsCallable('createParty')();
+        partyCode = result.data.partyCode;
+        addFirebaseListeners();
+    } catch (err) {
         console.error(err);
-    }
-    addFirebaseListeners();
+        return
+    };
     
     // open party screen - do it in popup
-    chrome.storage.sync.set({inParty: true, partyCode:globalPartyCode},function(){
-        console.log('Party Code ' + globalPartyCode + ' saved to storage', response => console.log(response));
+    chrome.storage.sync.set({inParty: true, partyCode:partyCode},function(){
+        console.log('Party Code ' + partyCode + ' saved to storage', response => console.log(response));
     });
 
     player.connect();
     transferPlayback();
     
-    return globalPartyCode
+    return partyCode
 }
 
 async function joinParty(inputPartyCode){
-    // TODO: check if party exists
+    // TODO: Input Validation
 
+    try {
+        const result = await firebase.functions().httpsCallable('joinParty')({
+            partyCode: parseInt(inputPartyCode)
+        });
+        partyCode = result.data.partyCode;
+        addFirebaseListeners();
+    } catch (err) {
+        console.error(err);
+        return
+    }
 
-    // set user = true
-    const uid = firebase.auth().currentUser.uid;
-
-    database.ref('parties/users/').child(inputPartyCode).child(uid).set({'displayName': firebase.auth().currentUser.displayName})
-    .then(() => console.log('set user'))
-
-    // set db listeners
-    globalPartyCode = inputPartyCode;
-    addFirebaseListeners();
-
-    chrome.storage.sync.set({inParty: true, partyCode: globalPartyCode}, function(){
-        console.log('Party Code ' + globalPartyCode + ' saved to storage');
+    chrome.storage.sync.set({inParty: true, partyCode: partyCode}, function(){
+        console.log('Party Code ' + partyCode + ' saved to storage');
     });
 
     player.connect();
@@ -268,14 +218,14 @@ function leaveParty(){
     // set user = false
     const uid = firebase.auth().currentUser.uid;
 
-    database.ref('parties/users/').child(globalPartyCode).child(uid).remove()
+    database.ref('parties/users/').child(partyCode).child(uid).remove()
     .then(() => console.log('removed user'))
 
     // remove db listeners
-    const attributesRef = database.ref('parties/attributes/').child(globalPartyCode);
-    const queueRef = database.ref('parties/queues/').child(globalPartyCode);
-    const stateRef = database.ref('parties/state/').child(globalPartyCode);
-    const usersRef = database.ref('parties/users/').child(globalPartyCode);
+    const attributesRef = database.ref('parties/attributes/').child(partyCode);
+    const queueRef = database.ref('parties/queues/').child(partyCode);
+    const stateRef = database.ref('parties/state/').child(partyCode);
+    const usersRef = database.ref('parties/users/').child(partyCode);
     attributesRef.off('value');
     queueRef.off('value');
     stateRef.off('value');
@@ -296,13 +246,13 @@ function leaveParty(){
 }
 
 function addFirebaseListeners(){
-    const attributesRef = database.ref('parties/attributes/').child(globalPartyCode);
-    const queueRef = database.ref('parties/queues/').child(globalPartyCode);
-    const stateRef = database.ref('parties/state/').child(globalPartyCode);
+    const attributesRef = database.ref('parties/attributes/').child(partyCode);
+    const queueRef = database.ref('parties/queues/').child(partyCode);
+    const stateRef = database.ref('parties/state/').child(partyCode);
     const stateIndexRef = stateRef.child('current_index');
     const stateLocRef = stateRef.child('current_loc');
     const stateStatusRef = stateRef.child('status');
-    const usersRef = database.ref('parties/users/').child(globalPartyCode);
+    const usersRef = database.ref('parties/users/').child(partyCode);
     attributesRef.on('value', (snapshot) => onAttributesChange(snapshot));
     queueRef.on('value', (snapshot) => onQueueChange(snapshot));
     stateIndexRef.on('value', (snapshot) => onStateIndexChange(snapshot));
@@ -410,13 +360,13 @@ function addToQueue(trackObj){
 
     updatePosition();
 
-    const partyQueueRef = database.ref('parties/queues/' + globalPartyCode);
+    const partyQueueRef = database.ref('parties/queues/' + partyCode);
     partyQueueRef.child(queueIndex).set(queueItem);
     
 }
 
 async function updateStatus(){
-    const stateRef = database.ref('parties/state/').child(globalPartyCode);
+    const stateRef = database.ref('parties/state/').child(partyCode);
     const stateStatusRef = stateRef.child('status');
 
     // set state
@@ -432,7 +382,7 @@ async function updateStatus(){
 }
 
 async function updatePosition(){
-    const stateRef = database.ref('parties/state/').child(globalPartyCode);
+    const stateRef = database.ref('parties/state/').child(partyCode);
     const stateLocRef = stateRef.child('current_loc');
 
     const state = await player.getCurrentState();
