@@ -1,4 +1,4 @@
-let access_token, refresh_token, last_token_refresh_time, global_device_id, player, loggingIn;
+let access_token, refresh_token, last_token_refresh_time, global_device_id, player, loggingIn = false;
 
 // initialize player
 window.onSpotifyWebPlaybackSDKReady = function(){

@@ -2,8 +2,12 @@
     "manifest_version": 2,
     "name": "Music Party",
     "version": "0.1.0",
+    "description": "Listen to music in sync with friends with Music Party!",
     "icons": {
-        "128": "static/images/icon_128.png"
+        "128": "static/images/icon_128.png",
+        "48": "static/images/icon_48.png",
+        "32": "static/images/icon_32.png",
+        "16": "static/images/icon_16.png"
     },
     "content_security_policy":"script-src 'self' https://www.gstatic.com/ https://*.firebaseio.com https://www.googleapis.com https://sdk.scdn.co/ https://apis.google.com 'unsafe-inline'; object-src 'self'",
     "background": {
@@ -11,7 +15,7 @@
         "persistent": false
     },
     "browser_action": {
-        "default_icon": "static/images/icon_19.png",
+        "default_icon": "static/images/icon_32.png",
         "default_title": "Music Party",
         "default_popup": "popup.html"
     },
